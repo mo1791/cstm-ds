@@ -67,13 +67,13 @@ public:
             , m_next{this}
         {}
     //  --------------------------------------------------------------------------
-        node(_Ty const &p_data) noexcept requires(std::copy_constructible<_Ty>)
+        explicit node(_Ty const &p_data) noexcept requires(std::copy_constructible<_Ty>)
             : m_data{p_data}
             , m_prev{this}
             , m_next{this}
         {}
     //  --------------------------------------------------------------------------
-        node(_Ty &&p_data) noexcept requires(std::move_constructible<_Ty>)
+        explicit node(_Ty &&p_data) noexcept requires(std::move_constructible<_Ty>)
             : m_data{std::move(p_data)}
             , m_prev{this}
             , m_next{this}
