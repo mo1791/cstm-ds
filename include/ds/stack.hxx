@@ -46,7 +46,7 @@ public:
 
 
 public:
-    using node_ptr_t = std::pointer_traits<_Ty*>::template rebind<node>;
+    using node_ptr_t = std::pointer_t<node<_Ty>>;
 
 public:
 //  -------------------------------------------------------------------------

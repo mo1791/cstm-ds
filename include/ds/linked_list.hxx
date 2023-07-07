@@ -56,7 +56,7 @@ public:
     using const_pointer    = std::add_pointer_t<std::add_const_t<_Ty>>;
 
 public:
-    using node_ptr_t = std::pointer_traits<_Ty *>::template rebind<node>;
+    using node_ptr_t = std::add_pointer_t<node<_Ty>>;
 
 public:
     //  --------------------------------------------------------------------------
