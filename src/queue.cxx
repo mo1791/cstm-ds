@@ -11,11 +11,20 @@
 // start queue
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
-    queue<T>::queue() noexcept requires( std::default_initializable<T> )
-        : m_head( new (std::nothrow) node_type( T{} ) )
-        , m_size{ 0x0UL }
+    template <class T>
+    queue<T>::queue() requires( std::default_initializable<T> )
     {
+        try
+        {
+            m_head = new node_type{};
+            m_size = 0ul;
+        }
+        catch(...)
+        {
+            m_head = ( delete m_head, nullptr );
+
+            throw;
+        }
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -25,18 +34,35 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
-    queue<T>::queue( queue const & p_outer ) noexcept
+    template <class T>
+    queue<T>::queue( queue const & p_outer )
         : queue()
     {
-        node_t v_node = p_outer.m_head->m_next;
 
-        while ( v_node != p_outer.m_head )
+        node_t v_curr = p_outer.m_head->m_next;
+        node_t v_node    = nullptr;
+
+
+        while ( v_curr != p_outer.m_head )
         {
-            push_back(v_node->m_data);
+
+            try
+            {
+                v_node = new node_type( v_curr->m_data );
+            }
+            catch(...)
+            {
+                v_node = ( delete v_node, nullptr );
+
+                throw;
+            }
+
+            m_head->push_back(v_node);
             
-            v_node = v_node->m_next;
+            v_curr = v_curr->m_next;
         }
+
+        m_size = p_outer.m_size;
     } 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -46,7 +72,7 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     queue<T>::queue( queue && p_outer ) noexcept
         : queue()
     {
@@ -60,10 +86,11 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
-    auto queue<T>::operator=( queue p_rhs ) noexcept -> decltype(auto)
+    template <class T>
+    auto queue<T>::operator=( queue p_rhs ) -> decltype(auto)
     {
         swap( *this, p_rhs );
+
         return *this;
     }
 //  -----------------------------------------------------------------------
@@ -74,36 +101,7 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
-    void queue<T>::push_back( T const& p_value ) noexcept
-    {
-        m_head->push_back( new (std::nothrow) node_type{ p_value } );
-
-        m_size = -(~m_size);
-    }
-//  -----------------------------------------------------------------------
-//  -----------------------------------------------------------------------
-
-
-
-
-//  -----------------------------------------------------------------------
-//  -----------------------------------------------------------------------
-    template <typename T>
-    void queue<T>::push( T const& p_value ) noexcept
-    {
-        m_head->push_back( new (std::nothrow) node_type{ p_value } );
-
-        m_size = -(~m_size);
-    }
-//  -----------------------------------------------------------------------
-//  -----------------------------------------------------------------------
-
-
-
-//  -----------------------------------------------------------------------
-//  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     void queue<T>::pop_front()
     {
         assert( not empty() );
@@ -112,7 +110,7 @@
         
         m_head->m_next          = v_curr->m_next;
         v_curr->m_next->m_prev  = m_head;
-        v_curr                  = ( free(v_curr), nullptr );
+        v_curr                  = ( delete v_curr, nullptr );
 
         m_size = ~(-m_size);
     }
@@ -123,7 +121,7 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     void queue<T>::pop()
     {
         pop_front();
@@ -135,7 +133,7 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto queue<T>::empty() const noexcept -> bool 
     {
         return ( ( m_head == m_head->m_prev ) && ( m_head == m_head->m_next ) );
@@ -147,7 +145,7 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto queue<T>::size() const noexcept -> queue::size_type
     {
         return m_size;
@@ -161,13 +159,11 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto queue<T>::peek() const noexcept -> std::optional<node_type>
     {
-        return ( not empty()
-                ? std::optional{ *m_head->m_next }
-                : std::nullopt
-            );
+        return not empty()  ? std::optional{ *m_head->m_next }
+                            : std::nullopt;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -178,7 +174,7 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto queue<T>::front() noexcept -> std::optional<node_type>
     {
         return peek();
@@ -192,7 +188,7 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto queue<T>::front() const noexcept -> std::optional<node_type>
     {
         return peek();
@@ -206,13 +202,11 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto queue<T>::back() noexcept -> std::optional<node_type>
     {
-        return ( not empty()
-                ? std::optional{ *m_head->m_prev }
-                : std::nullopt
-            );
+        return not empty()  ? std::optional{ *m_head->m_prev }
+                            : std::nullopt;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -223,13 +217,11 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto queue<T>::back() const noexcept -> std::optional<node_type>
     {
-        return ( not empty()
-                ? std::optional{ *m_head->m_prev }
-                : std::nullopt
-            );
+        return not empty()  ? std::optional{ *m_head->m_prev }
+                            : std::nullopt;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -240,7 +232,7 @@
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     queue<T>::~queue()
     {
        while ( not empty() )
@@ -248,7 +240,7 @@
             pop_front();
        }
 
-       m_head = ( free(m_head), nullptr );
+       m_head = ( delete m_head, nullptr );
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -256,8 +248,8 @@
 
 
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+//  -----------------------------------------------------------------------
+//  -----------------------------------------------------------------------
     template class queue<int>;
     template class queue<char>;
     template class queue<long>;
@@ -268,5 +260,5 @@
     template class queue<unsigned short>;
     template class queue<float>;
     template class queue<double>;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+//  -----------------------------------------------------------------------
+//  -----------------------------------------------------------------------

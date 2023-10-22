@@ -10,64 +10,65 @@
 // star stack
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     stack<T>::stack() noexcept
         : m_head(nullptr)
         , m_size(0x0ul)
     {
     }
 //  -------------------------------------------------------------------------
-    template <typename T>
-    stack<T>::stack(stack const & p_outer) noexcept
+    template <class T>
+    stack<T>::stack(stack const & p_outer)
         : stack()
     {
 
         node_t v_curr   = p_outer.m_head;
         node_t v_tracer = nullptr;
+        node_t v_node   = nullptr;
 
-
-        m_head    = new (std::nothrow) node_type{ v_curr->data(), nullptr };
-        v_curr    = v_curr->next();
-        v_tracer  = m_head;
-
-        while (v_curr)
+        try
         {
-            v_tracer->m_next = new (std::nothrow) node_type{ v_curr->data(), nullptr };
-            v_tracer         = v_tracer->next();
-            v_curr           = v_curr->next();
+            v_node = new node_type{ v_curr->m_data, nullptr };
+            
+            m_head   = v_node;
+            v_curr   = v_curr->m_next;
+            v_tracer = m_head;
+
+
+            while ( v_curr )
+            {
+                v_node = new node_type{ v_curr->m_data, nullptr };
+                
+                v_tracer->m_next = v_node;
+                v_tracer         = v_tracer->m_next;
+                v_curr           = v_curr->m_next;
+            }
+            
+            m_size = p_outer.m_size;
+
+        }
+        catch(...)
+        {
+            v_node = ( delete m_head, nullptr );
+
+            throw;
         }
 
-        m_size = p_outer.m_size;
     }
 //  -------------------------------------------------------------------------
-    template <typename T>
-    auto stack<T>::operator=( stack p_rhs ) noexcept -> decltype(auto)
-    {
-        swap( *this, p_rhs );
-        return *this;
-    }
-//  -------------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     stack<T>::stack( stack && p_outer ) noexcept
         : stack()
     {
         swap( *this, p_outer );
     }
 //  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-
-
-
-
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    template <typename T>
-    void stack<T>::push_front( T const& p_value ) noexcept
+    template <class T>
+    stack<T> &stack<T>::operator=( stack p_rhs )
     {
-        if ( ( m_head = new (std::nothrow) node_type{ p_value, m_head } ) )
-        {
-            m_size = -(~m_size);
-        }
+        swap( *this, p_rhs );
+        
+        return *this;
     }
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
@@ -77,33 +78,20 @@
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename T>
-    void stack<T>::push( T const& p_value ) noexcept
-    {
-        push_front( p_value );
-    }
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-
-
-
-
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     void stack<T>::pop_front()
     {
         assert( not empty() );
 
         node_t v_curr = m_head;
         
-        m_head         = m_head->next();
-        v_curr         = ( free(v_curr), nullptr );
+        m_head         = m_head->m_next;
+        v_curr         = ( delete v_curr, nullptr );
 
         m_size = ~(-m_size);
     }
 //  -------------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     void stack<T>::pop()
     { 
         pop_front();
@@ -116,7 +104,7 @@
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto stack<T>::empty() const noexcept -> bool
     {
         return ( m_head == nullptr );
@@ -128,7 +116,7 @@
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto stack<T>::size() const noexcept -> typename stack::size_type
     { 
         return m_size;
@@ -140,7 +128,7 @@
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     [[nodiscard]] auto stack<T>::peep() const noexcept -> std::optional<node_type>
     {
         return ( not empty() ? std::optional{ *m_head } : std::nullopt );
@@ -153,7 +141,7 @@
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename T>
+    template <class T>
     stack<T>::~stack()
     {
         while ( not empty() )
@@ -167,8 +155,8 @@
 
 
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
     template class stack<int>;
     template class stack<char>;
     template class stack<long>;
@@ -179,5 +167,5 @@
     template class stack<unsigned short>;
     template class stack<float>;
     template class stack<double>;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------

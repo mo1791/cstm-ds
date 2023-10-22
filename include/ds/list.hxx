@@ -1,6 +1,7 @@
 #ifndef LINKEDLIST_SENTINEL_NODE
 #define LINKEDLIST_SENTINEL_NODE
-// https://godbolt.org/z/1z11Mvzx5
+
+
 
 #include <algorithm>
 #include <cassert>
@@ -11,74 +12,83 @@
 #include <type_traits>
 #include <utility>
 
+namespace rng = std::ranges;
+
+
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
-template <typename> class list;
-template <typename> class Iterator;
-template <typename> class Forward;
-template <typename> class Backward;
+    template <class> class list;
+    template <class> class Iterator;
+    template <class> class Forward;
+    template <class> class Backward;
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
+
 /* START CONSTRAINTS */
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+    template <class T> concept is_class = std::is_class<T>::value;
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
-    template <typename _Ty>
-    concept is_class = std::is_class<_Ty>::value;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    template <typename _Ty, typename U>
-    concept non_self = not std::is_same<std::decay_t<_Ty>, U>::value &&
-                       not std::is_base_of<U, std::decay_t<_Ty>>::value;
+    template <class T, class U>
+    concept non_self = not std::is_same<std::decay_t<T>, U>::value &&
+                       not std::is_base_of<U, std::decay_t<T>>::value;
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
 /* END CONSTRAINTS */
 
 //
-template <typename _Ty>
-    class node final
+template <class T> class node final
 {
-public:
-    friend class list <_Ty>;
-    friend class Iterator <_Ty>;
-    friend class Forward <_Ty>;
-    friend class Backward <_Ty>;
 
 public:
-    using value_type       = _Ty;
-    using reference        = std::add_lvalue_reference_t<_Ty>;
-    using const_reference  = std::add_lvalue_reference_t<std::add_const_t<_Ty>>;
-    using pointer          = std::add_pointer_t<_Ty>;
-    using const_pointer    = std::add_pointer_t<std::add_const_t<_Ty>>;
+    friend class list <T>;
+    friend class Iterator <T>;
+    friend class Forward <T>;
+    friend class Backward <T>;
 
 public:
-    using node_ptr_t = std::add_pointer_t<node<_Ty>>;
+    using value_type       = T;
+    using reference        = typename std::add_lvalue_reference<T>::type;
+    using const_reference  = typename std::add_lvalue_reference<typename std::add_const<T>::type>::type;
+    using pointer          = typename std::add_pointer<T>::type;
+    using const_pointer    = typename std::add_pointer<typename std::add_const<T>::type>::type;
+
+public:
+    using node_ptr_t = std::add_pointer_t<node<T>>;
 
 public:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        node() noexcept requires(std::default_initializable<_Ty>)
-            : m_data{_Ty{}}
+        node() noexcept requires(std::default_initializable<T>)
+            : m_data{T{}}
             , m_prev{this}
             , m_next{this}
         {}
     //  --------------------------------------------------------------------------
-        explicit node(_Ty const &p_data) noexcept requires(std::copy_constructible<_Ty>)
+        explicit node(T const &p_data) noexcept requires(std::copy_constructible<T>)
             : m_data{p_data}
             , m_prev{this}
             , m_next{this}
         {}
     //  --------------------------------------------------------------------------
-        explicit node(_Ty &&p_data) noexcept requires(std::move_constructible<_Ty>)
+        explicit node(T &&p_data) noexcept requires(std::move_constructible<T>)
             : m_data{std::move(p_data)}
             , m_prev{this}
             , m_next{this}
         {}
     //  --------------------------------------------------------------------------
+        template <class ...ARGS>
+        node( ARGS&& ...p_args ) noexcept requires( is_class<T> && std::constructible_from<T, ARGS...> )
+            : m_data{ T{ std::forward<ARGS>(p_args)... } }
+            , m_prev{ this }
+            , m_next{ this }
+        {}
+//  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
 public:
@@ -122,13 +132,12 @@ private:
 //* END NODE *//
 
 // //
-template <typename _Ty>
-    class Iterator
+template <class T> class Iterator
 {
-    using node_type = node<_Ty>;
+    using node_type = node<T>;
 
 public:
-    using value_type         = _Ty;
+    using value_type         = T;
     using difference_type    = std::ptrdiff_t;
 
 public:
@@ -179,16 +188,15 @@ protected:
 //*****//
 
 // //
-template <typename _Ty>
-    class Forward final : public Iterator<_Ty> 
+template <class T> class Forward final : public Iterator<T> 
 {
 protected:
-    using Iterator<_Ty>::m_node;
+    using Iterator<T>::m_node;
 
 public:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        using Iterator<_Ty>::Iterator;
+        using Iterator<T>::Iterator;
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
@@ -238,16 +246,15 @@ public:
 //*****//
 
 // //
-template <typename _Ty>
-    class Backward final : public Iterator<_Ty>
+template <class T> class Backward final : public Iterator<T>
 {
 protected:
-    using Iterator<_Ty>::m_node;
+    using Iterator<T>::m_node;
 
 public:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        using Iterator<_Ty>::Iterator;
+        using Iterator<T>::Iterator;
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
@@ -289,28 +296,27 @@ public:
 //*****//
 
 // //
-template <typename _Ty>
-    class list final
+template <class T> class list final
 {
 private:
-    using node_type  = node<_Ty>;
+    using node_type  = node<T>;
     using node_t     = typename node_type::node_ptr_t;
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 public:
-    using value_type       = _Ty;
-    using reference        = std::add_lvalue_reference_t<_Ty>;
-    using const_reference  = std::add_lvalue_reference_t<std::add_const_t<_Ty>>;
-    using pointer          = std::add_pointer_t<_Ty>;
-    using const_pointer    = std::add_pointer_t<std::add_const_t<_Ty>>;
+    using value_type       = T;
+    using reference        = typename std::add_lvalue_reference<T>::type;
+    using const_reference  = typename std::add_lvalue_reference<typename std::add_const<T>::type>::type;
+    using pointer          = typename std::add_pointer<T>::type;
+    using const_pointer    = typename std::add_pointer<typename std::add_const<T>::type>::type;
     using size_type        = std::size_t;
     using difference_type  = std::ptrdiff_t;
 
-    using iterator                = Forward<_Ty>;
-    using const_iterator          = Forward<const _Ty>;
-    using reverse_iterator        = Backward<_Ty>;
-    using const_reverse_iterator  = Backward<const _Ty>;
+    using iterator                = Forward<T>;
+    using const_iterator          = Forward<typename std::add_const<T>::type>;
+    using reverse_iterator        = Backward<T>;
+    using const_reverse_iterator  = Backward<typename std::add_const<T>::type>;
     using iterator_category       = std::bidirectional_iterator_tag;
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
@@ -318,13 +324,13 @@ public:
 public:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        list() noexcept requires(std::default_initializable<_Ty>);
+        list() requires(std::default_initializable<T>);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        list(std::initializer_list<_Ty>) noexcept;
+        list(std::initializer_list<T>);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
@@ -336,14 +342,14 @@ public:
 
     //  --------------------------------------------------------------------------
     //  -------------------------------------------------------------------------
-        list(list const &) noexcept;
+        list(list const &) ;
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        template <std::ranges::input_range R>
-        list(R &&) noexcept requires(std::convertible_to<std::ranges::range_value_t<R>, _Ty>);
+        template <rng::input_range R>
+        list(R &&) requires(std::convertible_to<rng::range_value_t<R>, T>);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
@@ -352,7 +358,7 @@ public:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
         template <std::input_iterator I, std::sentinel_for<I> S>
-        list(I, S) noexcept requires( std::convertible_to<std::iter_value_t<I>, _Ty>);
+        list(I, S) requires( std::convertible_to<std::iter_value_t<I>, T>);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
@@ -362,39 +368,39 @@ public:
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        auto operator=(list) noexcept -> decltype(auto);
+        auto operator=(list) -> decltype(auto);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        void push_front(_Ty const &) noexcept;
+        template <class U>
+        void push_front( U && ) requires( std::convertible_to<U, T>);
     //  --------------------------------------------------------------------------
-        void push_back(_Ty const &)  noexcept;
+        template <class U>
+        void push_back( U &&)  requires( std::convertible_to<U, T>);
     //  --------------------------------------------------------------------------
-        void push_before(_Ty const &, const size_type) noexcept;
+        template <class U>
+        void push_before( U &&, const size_type) requires( std::convertible_to<U, T>);
     //  --------------------------------------------------------------------------
-        void push_after(_Ty const &, const size_type)  noexcept;
+        template <class U>
+        void push_after( U &&, const size_type) requires( std::convertible_to<U, T>);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        template <typename... ARGS>
-        void emplace_back(ARGS &&...) noexcept
-            requires(is_class<_Ty> && std::constructible_from<_Ty, ARGS...>);
+        template <class... ARGS>
+        void emplace_back(ARGS &&...) requires(is_class<T> && std::constructible_from<T, ARGS...>);
     //  --------------------------------------------------------------------------
-        template <typename... ARGS>
-        void emplace_front(ARGS &&...) noexcept
-            requires(is_class<_Ty> && std::constructible_from<_Ty, ARGS...>);
+        template <class... ARGS>
+        void emplace_front(ARGS &&...) requires(is_class<T> && std::constructible_from<T, ARGS...>);
     //  --------------------------------------------------------------------------
-        template <typename... ARGS>
-        void emplace_before(const size_type, ARGS &&...) noexcept
-            requires(is_class<_Ty> && std::constructible_from<_Ty, ARGS...>);
+        template <class... ARGS>
+        void emplace_before(const size_type, ARGS &&...) requires(is_class<T> && std::constructible_from<T, ARGS...>);
     //  --------------------------------------------------------------------------
-        template <typename... ARGS>
-        void emplace_after(const size_type, ARGS &&...) noexcept
-            requires(is_class<_Ty> && std::constructible_from<_Ty, ARGS...>);
+        template <class... ARGS>
+        void emplace_after(const size_type, ARGS &&...) requires(is_class<T> && std::constructible_from<T, ARGS...>);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
@@ -464,7 +470,7 @@ public:
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        friend void swap(list &p_lhs, list &p_rhs)
+        friend void swap(list &p_lhs, list &p_rhs) noexcept
         {
             using std::swap;
 
@@ -483,37 +489,39 @@ public:
 private:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        node_t at(const size_type p_pos) noexcept
+        node_t at(const size_type p_pos) const noexcept
         {
             assert(p_pos < m_size);
 
-            node_t    v_tmp = nullptr;
-            size_type v_mid = (m_size / 2);
+            node_t    v_temp = nullptr;
+            size_type v_mid  = (m_size / 2);
 
             if (v_mid < p_pos)
             {
                 auto v_index = ( m_size - 1ul );
-                v_tmp        = m_head->m_prev;
+                v_temp       = m_head->m_prev;
 
                 while (v_index > p_pos)
                 {
-                    v_tmp   = v_tmp->m_prev;
+                    v_temp  = v_temp->m_prev;
                     v_index = ~(-v_index);
                 }
-            } else {
+            } 
+            else
+            {
 
                 auto v_index{0ul};
 
-                v_tmp = m_head->m_next;
+                v_temp = m_head->m_next;
 
                 while (v_index < p_pos)
                 {
-                    v_tmp   = v_tmp->m_next;
+                    v_temp  = v_temp->m_next;
                     v_index = -(~v_index);
                 }
             }
 
-            return v_tmp;
+            return v_temp;
         }
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
@@ -533,14 +541,36 @@ private:
 // //
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
-    template<typename _Ty>
+    template<class T>
     template <std::input_iterator I, std::sentinel_for<I> S>
-    list<_Ty>::list(I first, S last) noexcept requires( std::convertible_to<std::iter_value_t<I>, _Ty>)
+    list<T>::list(I p_first, S p_last)  requires( std::convertible_to<std::iter_value_t<I>, T>)
         : list{}
     {
-        using std::placeholders::_1;
-        
-        std::ranges::for_each( first, last, std::bind( &list::push_back, this, _1) );
+        while ( p_first != p_last )
+        {
+            push_back( std::move(*p_first) );
+            ++p_first;
+        }
+    }
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+
+
+
+
+//  //
+
+//*****//
+
+// //
+
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+    template <class T> 
+    template <rng::input_range R>
+    list<T>::list(R &&p_list) requires(std::convertible_to<rng::range_value_t<R>, T>)
+        : list( rng::begin(p_list), rng::end(p_list) )
+    {
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
@@ -549,12 +579,27 @@ private:
 
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
-template <typename _Ty>
-template <std::ranges::input_range R>
-list<_Ty>::list(R &&p_list) noexcept requires(std::convertible_to<std::ranges::range_value_t<R>, _Ty>)
-    : list( std::ranges::begin(p_list), std::ranges::end(p_list) )
-{
-}
+    template <class T>
+    template <class U>
+    void list<T>::push_front( U && p_data ) requires( std::convertible_to<U, T> )
+    {
+        node_t v_node = nullptr;
+
+        try
+        {
+            v_node = new node_type( std::forward<U>(p_data) );
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
+
+            throw;
+        }
+
+        m_head->push_front( v_node );
+
+        m_size = -(~m_size);
+    }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
@@ -562,79 +607,89 @@ list<_Ty>::list(R &&p_list) noexcept requires(std::convertible_to<std::ranges::r
 
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
-template <typename _Ty>
-template <typename... ARGS>
-void list<_Ty>::emplace_front(ARGS &&...p_args) noexcept requires(is_class<_Ty> && std::constructible_from<_Ty, ARGS...>)
-{
-    m_head->push_front( new (std::nothrow) node_type{_Ty(std::forward<ARGS>(p_args)...)} );
+    template <class T>
+    template <class U>
+    void list<T>::push_back( U && p_data ) requires( std::convertible_to<U, T>)
+    {
+        node_t v_node = nullptr;
 
-    m_size = -(~m_size);
-}
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+        try
+        {
+            v_node = new node_type( std::forward<U>(p_data) );
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-template <typename _Ty>
-template <typename... ARGS>
-void list<_Ty>::emplace_back(ARGS &&...p_args) noexcept requires(is_class<_Ty> && std::constructible_from<_Ty, ARGS...>)
-{
-    m_head->push_back( new (std::nothrow) node_type{_Ty(std::forward<ARGS>(p_args)...)} );
+            throw;
+        }
 
-    m_size = -(~m_size);
-}
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+        m_head->push_back( v_node );
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-template <typename _Ty>
-template <typename... ARGS>
-void list<_Ty>::emplace_before(const size_type p_pos,
-                                        ARGS &&...p_args) noexcept
-    requires(is_class<_Ty> && std::constructible_from<_Ty, ARGS...>)
-{
-    node_t v_target = at(p_pos);
-    
-    v_target->push_back( new (std::nothrow) node_type{_Ty(std::forward<ARGS>(p_args)...)} );
-
-    m_size = -(~m_size);
-}
+        m_size = -(~m_size);
+    }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-template <typename _Ty>
-template <typename... ARGS>
-void list<_Ty>::emplace_after(const size_type p_pos,
-                                       ARGS &&...p_args) noexcept requires(is_class<_Ty> && std::constructible_from<_Ty, ARGS...>)
-{
-    node_t v_target = at(p_pos);
 
-    v_target->push_front( new (std::nothrow) node_type{_Ty(std::forward<ARGS>(p_args)...)} );
-    
-    m_size = -(~m_size);
-}
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
 
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
-extern template class list<int>;
-extern template class list<char>;
-extern template class list<long>;
-extern template class list<short>;
-extern template class list<unsigned int>;
-extern template class list<unsigned char>;
-extern template class list<unsigned long>;
-extern template class list<unsigned short>;
-extern template class list<float>;
-extern template class list<double>;
-extern template class list<std::string>;
+    template <class T>
+    template <class U>
+    void list<T>::push_before( U && p_data, const size_type p_pos ) 
+        requires( std::convertible_to<U, T>)
+    {
+        node_t v_node = nullptr;
+
+        try
+        {
+            new node_type( std::forward<U>(p_data) ); 
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
+
+            throw;
+        }
+
+
+        at(p_pos)->push_back( v_node );
+
+        m_size = -(~m_size);
+    }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
+
+
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+    template <class T>
+    template <class U>
+    void list<T>::push_after( U && p_data, const size_type p_pos )
+        requires( std::convertible_to<U, T>)
+    {
+        node_t v_node = nullptr;
+
+        try
+        {
+            new node_type( std::forward<U>(p_data) ); 
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
+
+            throw;
+        }
+
+
+        at(p_pos)->push_front( v_node );
+
+        m_size = -(~m_size);
+    }
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 
 
 
@@ -642,7 +697,135 @@ extern template class list<std::string>;
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
     template <class T>
+    template <class... ARGS>
+    void list<T>::emplace_front(ARGS &&...p_args)
+        requires(is_class<T> && std::constructible_from<T, ARGS...>)
+    {
+        node_t v_node = nullptr;
+
+        try
+        {
+            v_node = new node_type( std::forward<ARGS>(p_args)... );
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
+        }
+
+        m_head->push_front( v_node );
+        
+        m_size = -(~m_size);
+    }
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+
+
+
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+    template <class T>
+    template <class... ARGS>
+    void list<T>::emplace_back(ARGS &&...p_args)
+        requires(is_class<T> && std::constructible_from<T, ARGS...>)
+    {
+        node_t v_node = nullptr;
+
+        try
+        {
+            v_node = new node_type( std::forward<ARGS>(p_args)... );
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
+        }
+
+        m_head->push_back( v_node );
+        
+        m_size = -(~m_size);
+    }
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+
+
+
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+    template <class T>
+    template <class... ARGS>
+    void list<T>::emplace_before(const size_type p_pos,
+                                            ARGS &&...p_args)
+        requires(is_class<T> && std::constructible_from<T, ARGS...>)
+    {
+        node_t v_node = nullptr;
+
+        try
+        {
+            v_node = new node_type( std::forward<ARGS>(p_args)... );
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
+        }
+
+        at(p_pos)->push_back( v_node );
+        
+        m_size = -(~m_size);
+    }
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+    template <class T>
+    template <class... ARGS>
+    void list<T>::emplace_after(const size_type p_pos,
+                                           ARGS &&...p_args)
+        requires(is_class<T> && std::constructible_from<T, ARGS...>)
+    {
+
+        node_t v_node = nullptr;
+
+        try
+        {
+            v_node = new node_type( std::forward<ARGS>(p_args)... );
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
+        }
+
+        at(p_pos)->push_front( v_node );
+        
+        m_size = -(~m_size);
+    }
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+
+
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+    template <class T>
     inline constexpr bool std::ranges::enable_borrowed_range<list<T>> = true;
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+
+
+
+
+
+//  --------------------------------------------------------------------------
+//  --------------------------------------------------------------------------
+    extern template class list<int>;
+    extern template class list<char>;
+    extern template class list<long>;
+    extern template class list<short>;
+    extern template class list<unsigned int>;
+    extern template class list<unsigned char>;
+    extern template class list<unsigned long>;
+    extern template class list<unsigned short>;
+    extern template class list<float>;
+    extern template class list<double>;
+    extern template class list<std::string>;
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 

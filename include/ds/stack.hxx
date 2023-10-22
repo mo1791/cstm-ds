@@ -1,6 +1,8 @@
 #ifndef STACK_N_HXX
 #define STACK_N_HXX
 
+
+
 #include <algorithm>
 #include <cassert>
 #include <exception>
@@ -10,18 +12,19 @@
 #include <string>
 #include <ranges>
 
+namespace rng = std::ranges;
 
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename _Ty>
-    concept is_class = std::is_class<typename std::decay<_Ty>::type>::value;
+    template <class T>
+    concept is_class = std::is_class<typename std::decay<T>::type>::value;
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename> class stack;
+    template <class> class stack;
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
 
@@ -29,42 +32,47 @@
 
 // START NODE
 //
-template <typename _Ty>
-    class node final
+template <class T> class node final
 {
 
 public:
-    friend class stack<_Ty>;
+    friend class stack<T>;
 
 
 public:
-    using value_type      = _Ty;
-    using reference       = std::add_lvalue_reference_t<_Ty>;
-    using const_reference = std::add_lvalue_reference_t<std::add_const_t<_Ty>>;
-    using pointer         = std::add_pointer_t<_Ty>;
-    using const_pointer   = std::add_pointer_t<std::add_const_t<_Ty>>;
+    using value_type      = T;
+    using reference       = typename std::add_lvalue_reference<T>::type;
+    using const_reference = typename std::add_lvalue_reference<typename std::add_const<T>::type>::type;
+    using pointer         = typename std::add_pointer<T>::type;
+    using const_pointer   = typename std::add_pointer<typename std::add_const<T>::type>::type;
 
 
 public:
-    using node_ptr_t = std::pointer_t<node<_Ty>>;
+    using node_ptr_t = typename std::add_pointer<node<T>>::type;
 
 public:
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    node() noexcept requires( std::default_initializable<_Ty> )
-        : m_data{ _Ty{} }
+    node() noexcept requires( std::default_initializable<T> )
+        : m_data{ T{} }
         , m_next{ nullptr }
     {}
 //  -------------------------------------------------------------------------
-    node( _Ty const &p_value, node_ptr_t p_next ) noexcept requires( std::copy_constructible<_Ty> )
+    node( T const &p_value, node_ptr_t p_next ) noexcept requires( std::copy_constructible<T> )
         : m_data{ p_value }
         , m_next{ p_next }
     {}
 //  -------------------------------------------------------------------------
-    node( _Ty &&p_value, node_ptr_t p_next ) noexcept requires( std::move_constructible<_Ty> )
+    node( T &&p_value, node_ptr_t p_next ) noexcept requires( std::move_constructible<T> )
         : m_data{ std::move(p_value) }
         , m_next{ p_next }
     {}
+//  -------------------------------------------------------------------------
+    template <class ...ARGS>
+    node( ARGS &&... p_args ) noexcept requires( is_class<T> && std::constructible_from<T, ARGS...> )
+        : m_data{ std::forward<ARGS>(p_args)... }
+        , m_next{ nullptr }
+    {} 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
 
@@ -100,22 +108,21 @@ private:
 
 
 
-template <typename _Ty>
-    class stack final
+template <class T> class stack final
 {
 
 public:
-    using node_type = node<_Ty>;
+    using node_type = node<T>;
     using node_t    = typename node_type::node_ptr_t;
 
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 public:
-    using value_type      = _Ty;
-    using reference       = std::add_lvalue_reference_t<_Ty>;
-    using const_reference = std::add_lvalue_reference_t<std::add_const_t<_Ty>>;
-    using pointer         = std::add_pointer_t<_Ty>;
-    using const_pointer   = std::add_pointer_t<std::add_const_t<_Ty>>;
+    using value_type      = T;
+    using reference       = typename std::add_lvalue_reference<T>::type;
+    using const_reference = typename std::add_lvalue_reference<typename std::add_const<T>::type>::type;
+    using pointer         = typename std::add_pointer<T>::type;
+    using const_pointer   = typename std::add_pointer<typename std::add_const<T>::type>::type;
     using size_type       = std::size_t;
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
@@ -126,16 +133,16 @@ public:
     stack() noexcept;
 //  -------------------------------------------------------------------------
     template <std::input_iterator I, std::sentinel_for<I> S>
-    stack( I, S ) noexcept requires( std::convertible_to<std::iter_value_t<I>, _Ty> );
+    stack( I, S ) requires( std::convertible_to<std::iter_value_t<I>, T> );
 //  -------------------------------------------------------------------------
-    template <std::ranges::input_range R>
-    stack( R && ) noexcept requires( std::convertible_to<std::ranges::range_value_t<R>, _Ty> );
+    template <rng::input_range R>
+    stack( R && ) requires( std::convertible_to<rng::range_value_t<R>, T> );
 //  -------------------------------------------------------------------------
-    stack( stack const & ) noexcept ;
+    stack( stack const & );
 //  -------------------------------------------------------------------------
     stack( stack && ) noexcept;
 //  -------------------------------------------------------------------------
-    auto operator=( stack ) noexcept -> decltype(auto);
+    stack &operator=( stack );
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
 
@@ -143,20 +150,22 @@ public:
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    void push_front( _Ty const& ) noexcept;
+    template <class U> 
+    void push_front( U && ) requires( std::convertible_to<U, T>);
 //  -------------------------------------------------------------------------
-    void push( _Ty const& )       noexcept;
+    template <class U>
+    void push( U && ) requires( std::convertible_to<U, T>);
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
 
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename ...ARGS>
-    void emplace_front( ARGS && ... ) noexcept requires( is_class<_Ty> && std::constructible_from<_Ty, ARGS...> );
+    template <class ...ARGS>
+    void emplace_front( ARGS && ... ) requires( is_class<T> && std::constructible_from<T, ARGS...> );
 //  -------------------------------------------------------------------------
-    template <typename ...ARGS>
-    void emplace( ARGS && ... ) noexcept requires( is_class<_Ty> && std::constructible_from<_Ty, ARGS...> );
+    template <class ...ARGS>
+    void emplace( ARGS && ... ) requires( is_class<T> && std::constructible_from<T, ARGS...> );
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
 
@@ -206,7 +215,7 @@ public:
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    friend void swap( stack & p_lhs, stack & p_rhs )
+    friend void swap( stack & p_lhs, stack & p_rhs ) noexcept
     {
         using std::swap;
 
@@ -218,6 +227,7 @@ public:
 
 
 
+public:
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     void debug() const noexcept
@@ -226,8 +236,8 @@ public:
 
         while ( v_node )
         {
-            std::cout << v_node->data() << ' ';
-            v_node = v_node->next();
+            std::cout << v_node->m_data << ' ';
+            v_node = v_node->m_next;
         }
 
         std::cout << std::endl;
@@ -245,44 +255,103 @@ private:
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-    template <typename _Ty>
+    template <class T>
     template <std::input_iterator I, std::sentinel_for<I> S>
-    stack<_Ty>::stack( I p_begin, S p_end ) noexcept requires( std::convertible_to<std::iter_value_t<I>, _Ty> )
+    stack<T>::stack( I p_begin, S p_end ) requires( std::convertible_to<std::iter_value_t<I>, T> )
         : stack()
     {
-        using std::placeholders::_1;
-
-        std::ranges::for_each( p_begin, p_end, std::bind(&stack::push_front, this, _1) );
-    }
-//  -------------------------------------------------------------------------
-    template <typename _Ty>
-    template <std::ranges::input_range R>
-    stack<_Ty>::stack( R && p_container ) noexcept requires( std::convertible_to<std::ranges::range_value_t<R>, _Ty> )
-        : stack( std::ranges::begin(p_container), std::ranges::end(p_container) )
-    {
-    }
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-
-
-
-
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    template <typename _Ty>
-    template <typename ...ARGS>
-    void stack<_Ty>::emplace_front( ARGS && ...p_args ) noexcept requires( is_class<_Ty> && std::constructible_from<_Ty, ARGS...> )
-    {
-        if ( ( m_head = new (std::nothrow) node_type{ _Ty{ std::forward<ARGS>(p_args)...}, m_head } ) )
+        while( p_begin != p_end )
         {
-            m_size = -(~m_size);
+            push( std::move( *p_begin ) );
+
+            ++p_begin;
         }
     }
 //  -------------------------------------------------------------------------
+    template <class T>
+    template <std::ranges::input_range R>
+    stack<T>::stack( R && p_container ) requires( std::convertible_to<rng::range_value_t<R>, T> )
+        : stack( rng::begin(p_container), rng::end(p_container) )
+    {
+    }
 //  -------------------------------------------------------------------------
-    template <typename _Ty>
-    template <typename ...ARGS>
-    void stack<_Ty>::emplace( ARGS && ...p_args ) noexcept requires( is_class<_Ty> && std::constructible_from<_Ty, ARGS...> )
+//  -------------------------------------------------------------------------
+
+
+
+
+//  -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+    template <class T>
+    template <class U>
+    void stack<T>::push_front( U && p_value ) requires( std::convertible_to<U,T> )
+    {
+
+        node_t v_node = nullptr;
+
+        try
+        {
+            v_node = new node_type( std::forward<U>(p_value), m_head );
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
+
+            throw;
+        }
+
+        m_head = v_node;
+
+        m_size = -(~m_size);
+
+    }
+//  -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+
+
+
+
+//  -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+    template <class T>
+    template <class U>
+    void stack<T>::push( U && p_value ) requires( std::convertible_to<U,T> )
+    {
+        push_front( std::forward<U>(p_value) );
+    }
+//  -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+
+
+//  -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+    template <class T>
+    template <class ...ARGS>
+    void stack<T>::emplace_front( ARGS && ...p_args ) requires( is_class<T> && std::constructible_from<T, ARGS...> )
+    {
+        node_type* v_node = nullptr;
+
+        try
+        {
+            v_node = new node_type( std::forward<ARGS>(p_args)... );
+        }
+        catch(...)
+        {
+            v_node = ( delete v_node, nullptr );
+
+            throw;
+        }
+
+        v_node->m_next = m_head;
+        m_head         = v_node;
+
+        m_size = -(~m_size);
+    }
+//  -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+    template <class T>
+    template <class ...ARGS>
+    void stack<T>::emplace( ARGS && ...p_args ) requires( is_class<T> && std::constructible_from<T, ARGS...> )
     {
         emplace_front( std::forward<ARGS>(p_args)...);
     }
