@@ -4,147 +4,122 @@
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
-
-
 // star stack
 // star stack
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class T>
-    stack<T>::stack() noexcept
-        : m_head(nullptr)
-        , m_size(0x0ul)
-    {
-    }
+    stack<T>::stack() noexcept : m_head(nullptr), m_size(0x0ul) {}
 //  -------------------------------------------------------------------------
     template <class T>
-    stack<T>::stack(stack const & p_outer)
-        : stack()
+    stack<T>::stack(stack const &p_outer) : stack()
     {
-
         node_t v_curr   = p_outer.m_head;
         node_t v_tracer = nullptr;
         node_t v_node   = nullptr;
 
-        try
-        {
-            v_node = new node_type{ v_curr->m_data, nullptr };
-            
+        try {
+            v_node = new node_type{v_curr->m_data, nullptr};
+
             m_head   = v_node;
             v_curr   = v_curr->m_next;
             v_tracer = m_head;
 
-
-            while ( v_curr )
+            while (v_curr)
             {
-                v_node = new node_type{ v_curr->m_data, nullptr };
-                
+                v_node = new node_type{v_curr->m_data, nullptr};
+
                 v_tracer->m_next = v_node;
                 v_tracer         = v_tracer->m_next;
                 v_curr           = v_curr->m_next;
             }
-            
+
             m_size = p_outer.m_size;
 
-        }
-        catch(...)
-        {
-            v_node = ( delete m_head, nullptr );
+        } catch (...) {
+            v_node = (delete m_head, nullptr);
 
             throw;
         }
+    }
+//  -------------------------------------------------------------------------
+    template <class T>
+    stack<T>::stack(stack &&p_outer) noexcept : stack()
+    {
+        swap(*this, p_outer);
+    }
+//  -------------------------------------------------------------------------
+    template <class T>
+    stack<T> &stack<T>::operator=(stack p_rhs)
+    {
+        swap(*this, p_rhs);
 
-    }
-//  -------------------------------------------------------------------------
-    template <class T>
-    stack<T>::stack( stack && p_outer ) noexcept
-        : stack()
-    {
-        swap( *this, p_outer );
-    }
-//  -------------------------------------------------------------------------
-    template <class T>
-    stack<T> &stack<T>::operator=( stack p_rhs )
-    {
-        swap( *this, p_rhs );
-        
         return *this;
     }
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-
-
-
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class T>
     void stack<T>::pop_front()
     {
-        assert( not empty() );
+        assert(not empty());
 
         node_t v_curr = m_head;
-        
-        m_head         = m_head->m_next;
-        v_curr         = ( delete v_curr, nullptr );
+
+        m_head = m_head->m_next;
+
+        v_curr = (delete v_curr, nullptr);
 
         m_size = ~(-m_size);
     }
 //  -------------------------------------------------------------------------
     template <class T>
     void stack<T>::pop()
-    { 
+    {
         pop_front();
     }
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-
-
-
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class T>
     [[nodiscard]] auto stack<T>::empty() const noexcept -> bool
     {
-        return ( m_head == nullptr );
+        return (m_head == nullptr);
     }
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-
-
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto stack<T>::size() const noexcept -> typename stack::size_type
-    { 
+    [[nodiscard]] auto stack<T>::size() const noexcept ->
+        typename stack::size_type
+    {
         return m_size;
     }
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-
-
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class T>
     [[nodiscard]] auto stack<T>::peep() const noexcept -> std::optional<node_type>
     {
-        return ( not empty() ? std::optional{ *m_head } : std::nullopt );
+        return (not empty() ? std::optional{*m_head} : std::nullopt);
     }
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
-
-
-
 
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class T>
     stack<T>::~stack()
     {
-        while ( not empty() )
+        while (not empty())
         {
             pop_front();
         }
