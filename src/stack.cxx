@@ -95,7 +95,8 @@
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto stack<T>::size() const noexcept -> typename stack::size_type
+    [[nodiscard]] auto stack<T>::size() const noexcept 
+        -> typename stack::size_type
     {
         return m_size;
     }
@@ -105,11 +106,20 @@
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto stack<T>::peep() const noexcept -> std::optional<node_type>
+    [[nodiscard]] auto stack<T>::peep() const noexcept
+        -> std::optional<value_type>
     {
-        return (not empty() ? std::optional{*m_head} : std::nullopt);
+        return (not empty() ? std::optional{m_head->data()}
+                            : std::nullopt);
     }
 //  -------------------------------------------------------------------------
+    template <class T>
+    [[nodiscard]] auto stack<T>::peep() const noexcept
+        -> std::optional<value_type>
+    {
+        return (not empty() ? std::optional{m_head->data()}
+                            : std::nullopt);
+    }
 //  -------------------------------------------------------------------------
 
 //  -------------------------------------------------------------------------

@@ -135,7 +135,8 @@
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto list<T>::size() const noexcept -> typename list::size_type
+    [[nodiscard]] auto list<T>::size() const noexcept
+        -> typename list::size_type
     {
         return m_size;
     }
@@ -145,9 +146,11 @@
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto list<T>::front() const noexcept -> std::optional<node_type>
+    [[nodiscard]] auto list<T>::front() const noexcept
+        -> std::optional<value_type>
     {
-        return not empty() ? std::optional{*m_head->m_next} : std::nullopt;
+        return not empty()  ? std::optional{m_head->m_next->data()}
+                            : std::nullopt;
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
@@ -155,9 +158,11 @@
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto list<T>::back() const noexcept -> std::optional<node_type>
+    [[nodiscard]] auto list<T>::back() const noexcept
+        -> std::optional<value_type>
     {
-        return not empty() ? std::optional{*m_head->m_prev} : std::nullopt;
+        return not empty()  ? std::optional{m_head->m_prev->data()}
+                            : std::nullopt;
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------

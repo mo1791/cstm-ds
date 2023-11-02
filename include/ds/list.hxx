@@ -401,7 +401,7 @@ public: /** CONSTRUCTORS **/
         /** RANGE CTOR  (Construct with the contents of the range) **/
         template <rng::input_range R>
         list(R&&)
-            requires(std::convertible_to<rng::range_value_t<R>, T>);
+            requires(non_self<R, list> && std::convertible_to<rng::range_value_t<R>, T>);
     //  --------------------------------------------------------------------------
         /** RANGE CTOR (Construct with the contents of the range [ begin, end ]) **/
         template <std::input_iterator I, std::sentinel_for<I> S>
@@ -482,16 +482,20 @@ public:
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        [[nodiscard]] auto front() const noexcept -> std::optional<node_type>;
+        [[nodiscard]] auto front() const noexcept -> std::optional<value_type>;
+    //  --------------------------------------------------------------------------
+        [[nodiscard]] auto front()       noexcept -> std::optional<value_type>;
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        [[nodiscard]] auto back() const noexcept -> std::optional<node_type>;
+        [[nodiscard]] auto back() const noexcept -> std::optional<value_type>;
+    //  --------------------------------------------------------------------------
+        [[nodiscard]] auto back()       noexcept -> std::optional<value_type>;
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-
+        
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
         auto begin() noexcept -> iterator;
@@ -549,7 +553,8 @@ private:
         {
             assert(p_pos < m_size);
 
-            node_type* v_temp   = nullptr;
+            node_type* v_temp = nullptr;
+
             size_type  v_mid = (m_size / 2);
 
             if (v_mid < p_pos)
@@ -620,7 +625,9 @@ private:
 //  --------------------------------------------------------------------------
     template <class T>
     template <rng::input_range R>
-    list<T>::list(R&& p_list) requires(std::convertible_to<rng::range_value_t<R>, T>)
+    list<T>::list(R&& p_list)
+        requires(non_self<R, list> &&
+            std::convertible_to<rng::range_value_t<R>, T>)
         : list(rng::begin(p_list), rng::end(p_list))
     {}
 //  --------------------------------------------------------------------------

@@ -127,9 +127,19 @@
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto queue<T>::peek() const noexcept -> std::optional<node_type>
+    [[nodiscard]] auto queue<T>::peek() const noexcept
+        -> std::optional<value_type>
     {
-        return not empty() ? std::optional{*m_head->m_next} : std::nullopt;
+        return not empty()  ? std::optional{m_head->m_next->data()}
+                            : std::nullopt;
+    }
+//  -----------------------------------------------------------------------
+    template <class T>
+    [[nodiscard]] auto queue<T>::peek() noexcept
+        -> std::optional<value_type>
+    {
+        return not empty()  ? std::optional{m_head->m_next->data()}
+                            : std::nullopt;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -137,14 +147,11 @@
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto queue<T>::front() noexcept -> std::optional<node_type>
+    [[nodiscard]] auto queue<T>::front() noexcept
+        -> std::optional<value_type>
     {
         return peek();
     }
-//  -----------------------------------------------------------------------
-//  -----------------------------------------------------------------------
-
-//  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
     template <class T>
     [[nodiscard]] auto queue<T>::front() const noexcept
@@ -155,22 +162,23 @@
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
 
-//  -----------------------------------------------------------------------
-//  -----------------------------------------------------------------------
-    template <class T>
-    [[nodiscard]] auto queue<T>::back() noexcept -> std::optional<node_type>
-    {
-        return not empty() ? std::optional{*m_head->m_prev} : std::nullopt;
-    }
-//  -----------------------------------------------------------------------
-//  -----------------------------------------------------------------------
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto queue<T>::back() const noexcept -> std::optional<node_type>
+    [[nodiscard]] auto queue<T>::back() noexcept
+        -> std::optional<value_type>
     {
-        return not empty() ? std::optional{*m_head->m_prev} : std::nullopt;
+        return not empty()  ? std::optional{m_head->m_prev->data()}
+                            : std::nullopt;
+    }
+//  -----------------------------------------------------------------------
+    template <class T>
+    [[nodiscard]] auto queue<T>::back() const noexcept
+        -> std::optional<value_type>
+    {
+        return not empty()  ? std::optional{m_head->m_prev->data()}
+                            : std::nullopt;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------

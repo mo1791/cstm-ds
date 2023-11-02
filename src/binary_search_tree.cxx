@@ -475,7 +475,7 @@
     /** MAX DATA VALUE **/
     template <std::totally_ordered T>
     [[nodiscard]] auto binary_search_tree<T>::max() const noexcept
-        -> std::optional<T>
+        -> std::optional<value_type>
     {
         if (auto v_current = m_root)
         {
@@ -494,7 +494,7 @@
     /** MIN DATA VALUE **/
     template <std::totally_ordered T>
     [[nodiscard]] auto binary_search_tree<T>::min() const noexcept
-        -> std::optional<T>
+        -> std::optional<value_type>
     {
         if (auto v_current = m_root)
         {

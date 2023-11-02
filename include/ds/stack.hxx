@@ -119,11 +119,11 @@ public: /** TYPE ALIAS **/
     using node_type = node<T>;
 
 public: /** TYPE ALIAS **/
-    using value_type      = T;
-    using reference       = typename std::add_lvalue_reference<T>::type;
-    using const_reference = typename std::add_lvalue_reference<typename std::add_const<T>::type>::type;
-    using pointer         = typename std::add_pointer<T>::type;
-    using const_pointer   = typename std::add_pointer<typename std::add_const<T>::type>::type;
+    using value_type      = typename node_type::value_type;
+    using reference       = typename node_type::reference;
+    using const_reference = typename node_type::const_reference;
+    using pointer         = typename node_type::pointer;
+    using const_pointer   = typename node_type::const_pointer;
     using size_type       = std::size_t;
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
@@ -166,12 +166,10 @@ public:
     //  -------------------------------------------------------------------------
     //  -------------------------------------------------------------------------
         template <class U>
-        void push_front(U &&)
-            requires(std::convertible_to<U, T>);
+        void push_front(U &&) requires(std::convertible_to<U, T>);
     //  -------------------------------------------------------------------------
         template <class U>
-        void push(U &&)
-            requires(std::convertible_to<U, T>);
+        void push(U &&) requires(std::convertible_to<U, T>);
     //  -------------------------------------------------------------------------
     //  -------------------------------------------------------------------------
 
@@ -197,7 +195,9 @@ public:
 
     //  -------------------------------------------------------------------------
     //  -------------------------------------------------------------------------
-        [[nodiscard]] auto peep() const noexcept -> std::optional<node_type>;
+        [[nodiscard]] auto peep() const noexcept -> std::optional<value_type>;
+    //  -------------------------------------------------------------------------
+        [[nodiscard]] auto peep()       noexcept -> std::optional<value_type>;
     //  -------------------------------------------------------------------------
     //  -------------------------------------------------------------------------
 
@@ -249,8 +249,8 @@ public:
     //  -------------------------------------------------------------------------
     //  -------------------------------------------------------------------------
 private:
-    node_t    m_head;
-    size_type m_size;
+    node_type* m_head;
+    size_type  m_size;
 };
 
 //  -------------------------------------------------------------------------
@@ -305,8 +305,7 @@ private:
 //  -------------------------------------------------------------------------
     template <class T>
     template <class U>
-    void stack<T>::push(U &&p_value)
-        requires(std::convertible_to<U, T>)
+    void stack<T>::push(U &&p_value) requires(std::convertible_to<U, T>)
     {
         push_front(std::forward<U>(p_value));
     }
