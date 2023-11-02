@@ -1,5 +1,5 @@
-#ifndef LINKEDLIST_SENTINEL_NODE
-#define LINKEDLIST_SENTINEL_NODE
+#ifndef SINGLY_LINKEDLIST_HXX
+#define SINGLY_LINKEDLIST_HXX
 
 
 
@@ -16,10 +16,9 @@ namespace rng = std::ranges;
 
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
-    template <class> class list;
-    template <class> class Iterator;
-    template <class> class Forward;
-    template <class> class Backward;
+    template <typename> class forward_list;
+    template <typename> class Iterator;
+    template <typename> class Sentinel;
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
@@ -42,10 +41,8 @@ template <class T> class node final
 {
 
 public:
-    friend class list<T>;
+    friend class forward_list<T>;
     friend class Iterator<T>;
-    friend class Forward<T>;
-    friend class Backward<T>;
 
 
 public: /** TYPE ALIAS **/
@@ -66,24 +63,21 @@ public: /** CONSTRUCTORS **/
         /** DEFAULT CTOR **/
         node() noexcept requires(std::default_initializable<T>)
             : m_data{T{}}
-            , m_prev{this}
-            , m_next{this}
+            , m_next{nullptr}
         {}
     //  --------------------------------------------------------------------------
         /** PARAM CTOR **/
-        explicit node(T const &p_data) noexcept
+        explicit node(T const &p_data, node_ptr_t p_next = nullptr) noexcept
         requires(std::copy_constructible<T>)
             : m_data{p_data}
-            , m_prev{this}
-            , m_next{this}
+            , m_next{p_next}
         {}
     //  --------------------------------------------------------------------------
         /** PARAM CTOR (rvalue ref) **/
-        explicit node(T &&p_data) noexcept
+        explicit node(T &&p_data, node_ptr_t p_next = nullptr) noexcept
         requires(std::move_constructible<T>)
             : m_data{std::move(p_data)}
-            , m_prev{this}
-            , m_next{this}
+            , m_next{p_next}
         {}
     //  --------------------------------------------------------------------------
         /** **/
@@ -91,8 +85,7 @@ public: /** CONSTRUCTORS **/
         node(ARGS &&...p_args) noexcept
         requires(is_class<T> && std::constructible_from<T, ARGS...>)
             : m_data{T{std::forward<ARGS>(p_args)...}}
-            , m_prev{this}
-            , m_next{this}
+            , m_next{nullptr}
         {}
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
@@ -106,30 +99,8 @@ public: /** GETTERS **/
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
-private: /** HELPERS **/
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-        void push_front(node_ptr_t p_node) noexcept
-        {
-            p_node->m_next = m_next;
-            p_node->m_prev = this;
-            m_next->m_prev = p_node;
-            m_next = p_node;
-        }
-    //  --------------------------------------------------------------------------
-        void push_back(node_ptr_t p_node) noexcept
-        {
-            p_node->m_prev = m_prev;
-            p_node->m_next = this;
-            m_prev->m_next = p_node;
-            m_prev = p_node;
-        }
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-
 private:
     value_type m_data;
-    node_ptr_t m_prev;
     node_ptr_t m_next;
 };
 
@@ -140,6 +111,9 @@ private:
 // //
 template <class T> class Iterator
 {
+
+public:
+    friend class Sentinel<T>;
 
 public: /** TYPE ALIAS **/
     using node_type = node<T>;
@@ -167,7 +141,7 @@ public: /** CONSTRUCTORS **/
         Iterator(Iterator&&) noexcept = default;
     //  --------------------------------------------------------------------------
         /** PARAM CTOR **/
-        Iterator(typename node_type* p_node) noexcept : m_node(p_node) {}
+        Iterator(node_type* p_node) noexcept : m_node(p_node) {}
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
     
@@ -210,6 +184,27 @@ public:
 
 
     //  --------------------------------------------------------------------------
+        /** (POST & PRE ) INCREMENT OP **/
+    //  --------------------------------------------------------------------------
+        auto operator++() noexcept -> Iterator &
+        {
+            m_node = m_node->m_next;
+
+            return *this;
+        }
+    //  --------------------------------------------------------------------------
+        auto operator++(int) noexcept -> Iterator
+        {
+            auto v_tmp = *this;
+            ++(*this);
+
+            return (v_tmp);
+        }
+    //  --------------------------------------------------------------------------
+    //  --------------------------------------------------------------------------
+
+
+    //  --------------------------------------------------------------------------
         /** COMPAR OP **/
     //  --------------------------------------------------------------------------
         [[nodiscard]] friend auto operator==(Iterator const &p_lhs,
@@ -224,142 +219,38 @@ public:
     //  --------------------------------------------------------------------------
 
 protected:
-    typename node_type* m_node;
+    node_type* m_node;
 
 };
 
-//  //
+//** END ITERATOR **//
 
-//*****//
 
-// //
-template <class T>
-class Forward final : public Iterator<T>
+//** START SENTINEL **//
+
+template <class T> struct Sentinel
 {
 
-protected:
-    using Iterator<T>::m_node;
-
 public:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        using Iterator<T>::Iterator;
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-
-
-public:
-    //  --------------------------------------------------------------------------
-        /** (POST & PRE ) INCREMENT OP **/
-    //  --------------------------------------------------------------------------
-        auto operator++() noexcept -> Forward &
+        [[nodiscard]] friend auto operator==(Iterator<T> const& lhs,
+                                             Sentinel<T> const&) noexcept
+            -> bool
         {
-            m_node = m_node->m_next;
-
-            return *this;
-        }
-    //  --------------------------------------------------------------------------
-        auto operator++(int) noexcept -> Forward
-        {
-            auto v_tmp = *this;
-            ++(*this);
-
-            return (v_tmp);
-        }
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-
-
-    //  --------------------------------------------------------------------------
-        /** (POST & PRE ) DECREMENT OP **/
-    //  --------------------------------------------------------------------------
-        auto operator--() noexcept -> Forward &
-        {
-            m_node = m_node->m_prev;
-            
-            return *this;
-        }
-    //  --------------------------------------------------------------------------
-        auto operator--(int) noexcept -> Forward
-        {
-            auto v_tmp = *this;
-            --(*this);
-
-            return (v_tmp);
+            return ( lhs.m_node == nullptr );
         }
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 };
 
-//  //
+//** END SENTINEL **//
+
 
 //*****//
 
-// //
-template <class T>
-class Backward final : public Iterator<T>
-{
-
-protected:
-    using Iterator<T>::m_node;
-
-public:
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-        using Iterator<T>::Iterator;
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-
-
-public:
-    //  --------------------------------------------------------------------------
-        /** (POST & PRE) INCREMENT OP **/
-    //  --------------------------------------------------------------------------
-        auto operator++() noexcept -> Backward &
-        {
-            m_node = m_node->m_prev;
-
-            return *this;
-        }
-    //  --------------------------------------------------------------------------
-        auto operator++(int) noexcept -> Backward
-        {
-            auto v_tmp = *this;
-            ++(*this);
-
-            return (v_tmp);
-        }
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-
-
-    //  --------------------------------------------------------------------------
-        /** (POST & PRE) DECREMENT OP **/
-    //  --------------------------------------------------------------------------
-        auto operator--() noexcept -> Backward &
-        {
-            m_node = m_node->m_next;
-
-            return *this;
-        }
-    //  --------------------------------------------------------------------------
-        auto operator--(int) noexcept -> Backward
-        {
-            auto v_tmp = *this;
-            --(*this);
-
-            return (v_tmp);
-        }
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-};
-
-//  //
-
-//*****//
-
-// //
-template <class T> class list final
+// FORWARD_LIST //
+template <class T> class forward_list final
 {
    
 private: /** TYPE ALIAS **/
@@ -375,37 +266,36 @@ public:/** TYPE ALIAS **/
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
 
-    using iterator               = Forward<T>;
-    using const_iterator         = Forward<typename std::add_const<T>::type>;
-    using reverse_iterator       = Backward<T>;
-    using const_reverse_iterator = Backward<typename std::add_const<T>::type>;
-    using iterator_category      = std::bidirectional_iterator_tag;
+    using iterator          = Iterator<T>;
+    using const_iterator    = Iterator<typename std::add_const<T>::type>;
+    using sentinel          = Sentinel<T>;
+    using iterator_category = std::forward_iterator_tag;
    
 
 public: /** CONSTRUCTORS **/
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
         /** DEFAULT CTOR **/
-        list()
+        forward_list()
             requires(std::default_initializable<T>);
     //  --------------------------------------------------------------------------
         /** COPY CTOR **/
-        list(list const&);
+        forward_list(forward_list const&);
     //  --------------------------------------------------------------------------
         /** MOVE CTOR **/
-        list(list&&) noexcept;
+        forward_list(forward_list&&) noexcept;
     //  --------------------------------------------------------------------------
-        /** INITIALIZER_LIST CTOR (Construct with the contents of the initializer list) **/
-        list(std::initializer_list<T>);
+        /** INITIALIZER_LIST CTOR (Construct with the contents of the initializer forward_list) **/
+        forward_list(std::initializer_list<T>);
     //  --------------------------------------------------------------------------
         /** RANGE CTOR  (Construct with the contents of the range) **/
         template <rng::input_range R>
-        list(R&&)
-            requires(std::convertible_to<rng::range_value_t<R>, T>);
+        forward_list(R&&)
+            requires(non_self<R, forward_list> && std::convertible_to<rng::range_value_t<R>, T>);
     //  --------------------------------------------------------------------------
         /** RANGE CTOR (Construct with the contents of the range [ begin, end ]) **/
         template <std::input_iterator I, std::sentinel_for<I> S>
-        list(I, S)
+        forward_list(I, S)
             requires(std::convertible_to<std::iter_value_t<I>, T>);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
@@ -414,7 +304,7 @@ public: /** CONSTRUCTORS **/
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
         /** ASSIGNMENT OP ( copy-swap idiom ) **/
-        auto operator=(list) -> decltype(auto);
+        auto operator=(forward_list) -> decltype(auto);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
@@ -423,28 +313,17 @@ public:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
         template <class U>
-        void push_front(U&&)
-            requires(std::convertible_to<U, T>);
+        void push_front(U&&) requires(std::convertible_to<U, T>);
     //  --------------------------------------------------------------------------
         template <class U>
-        void push_back(U&&)
-            requires(std::convertible_to<U, T>);
+        void push_before(U&&, std::integral auto) requires(std::convertible_to<U, T>);
     //  --------------------------------------------------------------------------
         template <class U>
-        void push_before(U&&, std::integral auto)
-            requires(std::convertible_to<U, T>);
-    //  --------------------------------------------------------------------------
-        template <class U>
-        void push_after(U&&, std::integral auto)
-            requires(std::convertible_to<U, T>);
+        void push_after(U&&, std::integral auto) requires(std::convertible_to<U, T>);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
     //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-        template <class... ARGS>
-        void emplace_back(ARGS&& ...)
-            requires(is_class<T> && std::constructible_from<T, ARGS...>);
     //  --------------------------------------------------------------------------
         template <class... ARGS>
         void emplace_front(ARGS&& ...)
@@ -464,7 +343,7 @@ public:
     //  --------------------------------------------------------------------------
         void pop_front();
     //  --------------------------------------------------------------------------
-        void pop_back();
+        void pop_at(std::integral auto);
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
@@ -482,13 +361,7 @@ public:
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        [[nodiscard]] auto front() const noexcept -> std::optional<node_type>;
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-        [[nodiscard]] auto back() const noexcept -> std::optional<node_type>;
+        [[nodiscard]] auto front() const noexcept -> std::optional<value_type>;
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
@@ -502,31 +375,16 @@ public:
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        auto end() noexcept -> iterator;
+        auto end() noexcept -> sentinel;
     //  --------------------------------------------------------------------------
-        auto end() const noexcept -> iterator;
+        auto end() const noexcept -> sentinel;
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
+        
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        auto rbegin() noexcept -> reverse_iterator;
-    //  --------------------------------------------------------------------------
-        auto rbegin() const noexcept -> reverse_iterator;
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-        auto rend() noexcept -> reverse_iterator;
-    //  --------------------------------------------------------------------------
-        auto rend() const noexcept -> reverse_iterator;
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-
-    //  --------------------------------------------------------------------------
-    //  --------------------------------------------------------------------------
-        friend void swap(list &p_lhs, list &p_rhs) noexcept
+        friend void swap(forward_list &p_lhs, forward_list &p_rhs) noexcept
         {
             using std::swap;
 
@@ -538,45 +396,72 @@ public:
 
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        ~list();
+        ~forward_list();
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
+
 
 private:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
-        node_t at(std::integral auto p_pos) const noexcept
+        auto reverse(node_type* p_head) noexcept -> node_type*
         {
-            assert(p_pos < m_size);
+            node_type* p_prev = nullptr;
+            node_type* p_curr = p_head;
 
-            node_type* v_temp   = nullptr;
-            size_type  v_mid = (m_size / 2);
-
-            if (v_mid < p_pos)
+            while( p_curr != nullptr)
             {
-                auto v_index = (m_size - 1ul);
-                v_temp       = m_head->m_prev;
-
-                while (v_index > p_pos)
-                {
-                    v_temp  = v_temp->m_prev;
-                    v_index = v_index - 1ul;
-                }
+                node_type* p_next = p_curr->m_next;
+                
+                p_curr->m_next = p_prev;
+                p_prev         = p_curr;
+                p_curr         = p_next;
             }
-            else
+            return p_prev;
+        }
+    //  --------------------------------------------------------------------------
+    //  --------------------------------------------------------------------------
+    
+
+    //  --------------------------------------------------------------------------
+    //  --------------------------------------------------------------------------
+        auto find_before(std::integral auto p_pos) noexcept -> node_type*
+        {
+            if ( p_pos < 0ul || p_pos >= m_size )
             {
-                auto v_index{0ul};
-
-                v_temp = m_head->m_next;
-
-                while (v_index < p_pos)
-                {
-                    v_temp  = v_temp->m_next;
-                    v_index = v_index + 1ul;
-                }
+                return nullptr;
             }
 
-            return v_temp;
+            node_type* v_curr = m_head, *v_prev = nullptr;
+
+            for( auto index = 0ul; v_curr != nullptr; )
+            {
+                if ( index++ == p_pos ) break;
+
+                v_prev = v_curr;
+                v_curr = v_curr->m_next;
+            }
+
+            return v_prev;
+        }
+    //  --------------------------------------------------------------------------
+        auto find_after(std::integral auto p_pos) noexcept -> node_type*
+        {
+            if ( p_pos < 0ul || p_pos >= m_size )
+            {
+                return nullptr;
+            }
+
+            node_type* v_curr = m_head;
+
+            for( auto index = 0ul; v_curr != nullptr; )
+            {
+                if ( index++ == p_pos ) break;
+
+                v_curr = v_curr->m_next;
+            }
+
+            return v_curr;
         }
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
@@ -596,16 +481,17 @@ private:
 //  --------------------------------------------------------------------------
     template <class T>
     template <std::input_iterator I, std::sentinel_for<I> S>
-    list<T>::list(I p_first, S p_last)
+    forward_list<T>::forward_list(I p_first, S p_last)
     requires(std::convertible_to<std::iter_value_t<I>, T>)
-        : list{}
+        : forward_list{}
     {
         using std::placeholders::_1;
         using std::ranges::for_each;
-
+    
         for_each(p_first, p_last,
-                std::bind(&list::template push_back<std::iter_reference_t<I>>,
+                std::bind(&forward_list::template push_front<std::iter_reference_t<I> >,
                         this, _1));
+    
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
@@ -620,8 +506,10 @@ private:
 //  --------------------------------------------------------------------------
     template <class T>
     template <rng::input_range R>
-    list<T>::list(R&& p_list) requires(std::convertible_to<rng::range_value_t<R>, T>)
-        : list(rng::begin(p_list), rng::end(p_list))
+    forward_list<T>::forward_list(R&& p_list)
+    requires( non_self<R, forward_list> &&
+              std::convertible_to<rng::range_value_t<R>, T>)
+        : forward_list(rng::rbegin(p_list), rng::rend(p_list))
     {}
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
@@ -630,67 +518,52 @@ private:
 //  --------------------------------------------------------------------------
     template <class T>
     template <class U>
-    void list<T>::push_front(U&& p_data) requires(std::convertible_to<U, T>)
+    void forward_list<T>::push_front(U&& p_data) requires(std::convertible_to<U, T>)
     {
         node_type* v_node = nullptr;
 
         try {
-            v_node = new node_type(std::forward<U>(p_data));
+            v_node = new node_type(std::forward<U>(p_data), m_head);
         }
         catch (...) {
             v_node = (delete v_node, nullptr);
             throw;
         }
 
-        m_head->push_front(v_node);
-
+        
+        m_head = v_node;
         m_size = m_size + 1ul;
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    template <class T>
-    template <class U>
-    void list<T>::push_back(U&& p_data) requires(std::convertible_to<U, T>)
-    {
-        node_type* v_node = nullptr;
 
-        try {
-            v_node = new node_type(std::forward<U>(p_data));
-        }
-        catch (...) {
-            v_node = (delete v_node, nullptr);
-            throw;
-        }
-
-        m_head->push_back(v_node);
-
-        m_size = m_size + 1ul;
-    }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
 
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
     template <class T>
     template <class U>
-    void list<T>::push_before(U&& p_data, std::integral auto p_pos)
+    void forward_list<T>::push_before(U&& p_data, std::integral auto p_pos)
         requires(std::convertible_to<U, T>)
     {
+        
+        node_type* v_targ = find_before(p_pos);
+
+        if ( not v_targ ) return;
+
+
         node_type* v_node = nullptr;
 
         try {
-            v_node = new node_type(std::forward<U>(p_data));
+            v_node = new node_type(std::forward<U>(p_data), v_targ->m_next);
         }
         catch (...) {
             v_node = (delete v_node, nullptr);
             throw;
         }
 
-        at(p_pos)->push_back(v_node);
 
+        v_targ->m_next = v_node;
         m_size = m_size + 1ul;
     }
 //  --------------------------------------------------------------------------
@@ -700,21 +573,22 @@ private:
 //  --------------------------------------------------------------------------
     template <class T>
     template <class U>
-    void list<T>::push_after(U&& p_data, std::integral auto p_pos)
+    void forward_list<T>::push_after(U&& p_data, std::integral auto p_pos)
         requires(std::convertible_to<U, T>)
     {
+        node_type* v_targ = find_after(p_pos);
+
         node_type* v_node = nullptr;
 
         try {
-           v_node = new node_type(std::forward<U>(p_data));
+            v_node = new node_type(std::forward<U>(p_data), v_targ->m_next);
         }
         catch (...) {
             v_node = (delete v_node, nullptr);
             throw;
         }
 
-        at(p_pos)->push_front(v_node);
-
+        v_targ->m_next = v_node;
         m_size = m_size + 1ul;
     }
 //  --------------------------------------------------------------------------
@@ -724,7 +598,7 @@ private:
 //  --------------------------------------------------------------------------
     template <class T>
     template <class... ARGS>
-    void list<T>::emplace_front(ARGS&& ...p_args)
+    void forward_list<T>::emplace_front(ARGS&& ...p_args)
         requires(is_class<T> && std::constructible_from<T, ARGS...>)
     {
         node_type* v_node = nullptr;
@@ -737,20 +611,27 @@ private:
             throw;
         }
 
-        m_head->push_front(v_node);
+        v_node->m_next = m_head;
+        m_head         = v_node;
 
         m_size = m_size + 1ul;
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
+
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
     template <class T>
     template <class... ARGS>
-    void list<T>::emplace_back(ARGS&& ...p_args)
+    void forward_list<T>::emplace_before(std::integral auto p_pos, ARGS&& ...p_args)
         requires(is_class<T> && std::constructible_from<T, ARGS...>)
     {
+
+        node_type* v_targ = find_before(p_pos);
+
+        if ( not v_targ ) return;
+
         node_type* v_node = nullptr;
 
         try {
@@ -761,7 +642,8 @@ private:
             throw;
         }
 
-        m_head->push_back(v_node);
+        v_node->m_next = v_targ->m_next;
+        v_targ->m_next = v_node;
 
         m_size = m_size + 1ul;
     }
@@ -772,9 +654,14 @@ private:
 //  --------------------------------------------------------------------------
     template <class T>
     template <class... ARGS>
-    void list<T>::emplace_before(std::integral auto p_pos, ARGS&& ...p_args)
+    void forward_list<T>::emplace_after(std::integral auto p_pos, ARGS&& ...p_args)
         requires(is_class<T> && std::constructible_from<T, ARGS...>)
     {
+
+        node_type* v_targ = find_after(p_pos);
+
+        if ( not v_targ) return;
+
         node_type* v_node = nullptr;
 
         try {
@@ -785,36 +672,39 @@ private:
             throw;
         }
 
-        at(p_pos)->push_back(v_node);
+        v_node->m_next = v_targ->m_next;
+        v_targ->m_next = v_node;
 
         m_size = m_size + 1ul;
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
+
+
 
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
     template <class T>
-    template <class... ARGS>
-    void list<T>::emplace_after(std::integral auto p_pos, ARGS&& ...p_args)
-        requires(is_class<T> && std::constructible_from<T, ARGS...>)
+    void forward_list<T>::pop_at(std::integral auto p_pos)
     {
-        node_type* v_node = nullptr;
+        assert( not empty() );
 
-        try {
-            v_node = new node_type(std::forward<ARGS>(p_args)...);
-        }
-        catch (...) {
-            v_node = (delete v_node, nullptr);
-            throw;
-        }
+        node_type* v_tmp = find_before(p_pos);
 
-        at(p_pos)->push_front(v_node);
+        if ( not v_tmp || not v_tmp->m_next )
+            return;
 
-        m_size = m_size + 1ul;
+        node_type* v_targ = v_tmp->m_next;
+
+        v_tmp->m_next = v_targ->m_next;
+
+        v_targ = ( delete v_targ, nullptr );
+
+        m_size = m_size - 1ul;
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
+
 
 
 //  -----------------------------------------------------------------------
@@ -822,30 +712,30 @@ private:
     /** USER DEFINED TYPE DEDUCTION **/
 //  -----------------------------------------------------------------------
     template <rng::range R>
-    list( R&& ) -> list<rng::range_value_t<R>>;
+    forward_list( R&& ) -> forward_list<rng::range_value_t<R>>;
 //  -----------------------------------------------------------------------
     template <std::input_iterator I, std::sentinel_for<I> S>
-    list( I, S ) -> list<std::iter_value_t<I>>;
+    forward_list( I, S ) -> forward_list<std::iter_value_t<I>>;
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
 
 
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
-    extern template class list<int>;
-    extern template class list<char>;
-    extern template class list<long>;
-    extern template class list<short>;
-    extern template class list<unsigned int>;
-    extern template class list<unsigned char>;
-    extern template class list<unsigned long>;
-    extern template class list<unsigned short>;
-    extern template class list<float>;
-    extern template class list<double>;
-    extern template class list<std::string>;
+    extern template class forward_list<int>;
+    extern template class forward_list<char>;
+    extern template class forward_list<long>;
+    extern template class forward_list<short>;
+    extern template class forward_list<unsigned int>;
+    extern template class forward_list<unsigned char>;
+    extern template class forward_list<unsigned long>;
+    extern template class forward_list<unsigned short>;
+    extern template class forward_list<float>;
+    extern template class forward_list<double>;
+    extern template class forward_list<std::string>;
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
 
 #endif
-// // end linked_list
+// // end forward_list
