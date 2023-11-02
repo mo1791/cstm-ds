@@ -19,9 +19,9 @@
         try {
             m_head = new node_type{};
             m_size = 0ul;
-        } catch (...) {
+        }
+        catch (...) {
             m_head = (delete m_head, nullptr);
-
             throw;
         }
     }
@@ -86,14 +86,14 @@
     {
         assert(not empty());
 
-        node_t v_curr = m_head->m_next;
+        node_type* v_curr = m_head->m_next;
 
         v_curr->m_next->m_prev = m_head;
         m_head->m_next         = v_curr->m_next;
         
         v_curr = (delete v_curr, nullptr);
 
-        m_size = ~(-m_size);
+        m_size = m_size - 1ul;
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
@@ -105,14 +105,14 @@
     {
         assert(not empty());
 
-        node_t v_curr = m_head->m_prev;
+        node_type* v_curr = m_head->m_prev;
 
         v_curr->m_prev->m_next = m_head;
         m_head->m_prev         = v_curr->m_prev;
         
         v_curr = (delete v_curr, nullptr);
 
-        m_size = ~(-m_size);
+        m_size = m_size - 1ul;
     }
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------

@@ -14,9 +14,9 @@
     template <class T>
     stack<T>::stack(stack const &p_outer) : stack()
     {
-        node_t v_curr   = p_outer.m_head;
-        node_t v_tracer = nullptr;
-        node_t v_node   = nullptr;
+        node_type* v_curr   = p_outer.m_head;
+        node_type* v_tracer = nullptr;
+        node_type* v_node   = nullptr;
 
         try {
             v_node = new node_type{v_curr->m_data, nullptr};
@@ -35,10 +35,9 @@
             }
 
             m_size = p_outer.m_size;
-
-        } catch (...) {
+        }
+        catch (...) {
             v_node = (delete m_head, nullptr);
-
             throw;
         }
     }
@@ -66,13 +65,13 @@
     {
         assert(not empty());
 
-        node_t v_curr = m_head;
+        node_type* v_curr = m_head;
 
         m_head = m_head->m_next;
 
         v_curr = (delete v_curr, nullptr);
 
-        m_size = ~(-m_size);
+        m_size = m_size - 1ul;
     }
 //  -------------------------------------------------------------------------
     template <class T>
@@ -96,8 +95,7 @@
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class T>
-    [[nodiscard]] auto stack<T>::size() const noexcept ->
-        typename stack::size_type
+    [[nodiscard]] auto stack<T>::size() const noexcept -> typename stack::size_type
     {
         return m_size;
     }

@@ -20,11 +20,15 @@ namespace rng = std::ranges;
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
 
+/* START CONSTRAINTS */
+
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
     template <class T> concept is_class = std::is_class<T>::value;
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
+
+/* END CONSTRAINTS */
 
 //
 // START NODE
@@ -35,19 +39,21 @@ template <class T> class node final
 public:
     friend class queue<T>;
 
-public:
+public: /** TYPE ALIAS **/
     using value_type      = T;
     using reference       = typename std::add_lvalue_reference<T>::type;
     using const_reference = typename std::add_lvalue_reference<typename std::add_const<T>::type>::type;
     using pointer         = typename std::add_pointer<T>::type;
     using const_pointer   = typename std::add_pointer<typename std::add_const<T>::type>::type;
 
-public:
+public: /** TYPE ALIAS **/
     using node_ptr_t = std::add_pointer_t<node<T>>;
 
-public:
+
+public: /** CONSTRUCTORS **/
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
+        /** DEFAULT CTOR **/
         node() noexcept
             requires(std::default_initializable<T>)
             : m_data{T{}}
@@ -55,6 +61,7 @@ public:
             , m_next{this}
         {}
     //  --------------------------------------------------------------------------
+        /** PARAM CTOR (copy) **/
         explicit node(T const& p_data) noexcept
             requires(std::copy_constructible<T>)
             : m_data{p_data}
@@ -62,6 +69,7 @@ public:
             , m_next{this}
         {}
     //  --------------------------------------------------------------------------
+        /** PARAM CTOR (move) **/
         explicit node(T&& p_data) noexcept
             requires(std::move_constructible<T>)
             : m_data{std::move(p_data)}
@@ -69,6 +77,7 @@ public:
             , m_next{this}
         {}
     //  --------------------------------------------------------------------------
+        /** **/
         template <class... ARGS>
         node(ARGS&&... p_args) noexcept
             requires(is_class<T> && std::constructible_from<T, ARGS...>)
@@ -79,7 +88,7 @@ public:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
-public:
+public: /** GETTERS **/
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
         auto data() noexcept -> decltype(auto) { return m_data; }
@@ -88,7 +97,7 @@ public:
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
 
-public:
+private: /** HELPERS **/
     //  --------------------------------------------------------------------------
     //  --------------------------------------------------------------------------
         void push_front(node_ptr_t p_node) noexcept
@@ -119,48 +128,62 @@ private:
 
 //* END NODE *//
 
+
 // /*    */ //
 
 // /** **/ //
 template <class T> class queue final
 {
 
-public:
+public: /** TYPE ALIAS **/
     using node_type = node<T>;
-    using node_t = typename node_type::node_ptr_t;
-    //  -------------------------------------------------------------------------
-    //  -------------------------------------------------------------------------
 
-public:
-    using value_type      = T;
-    using reference       = typename std::add_lvalue_reference<T>::type;
-    using const_reference = typename std::add_lvalue_reference<typename std::add_const<T>::type>::type;
-    using pointer         = typename std::add_pointer<T>::type;
-    using const_pointer   = typename std::add_pointer<typename std::add_const<T>::type>::type;
+public: /** TYPE ALIAS **/
+    using value_type      = typename node_type::value_type;
+    using reference       = typename node_type::reference;
+    using const_reference = typename node_type::const_reference;
+    using pointer         = typename node_type::pointer;
+    using const_pointer   = typename node_type::const_pointer;
     using size_type       = std::size_t;
 
-public:
+
+
+public: /** CONSTRUCTORS **/
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
+        /** DEFAULT CTOR **/
         queue()
             requires(std::default_initializable<T>);
     //  -----------------------------------------------------------------------
+        /** COPY CTOR **/
+        queue(queue const&);
+    //  -----------------------------------------------------------------------
+        /** MOVE CTOR **/
+        queue(queue&&) noexcept;
+    //  -----------------------------------------------------------------------
+        /** RANGE CTOR (Construct with the contents of the range [ begin, end ]) **/
         template <std::input_iterator I, std::sentinel_for<I> S>
         queue(I, S)
             requires(std::convertible_to<std::iter_value_t<I>, T>);
     //  -----------------------------------------------------------------------
+        /** RANGE CTOR  (Construct with the contents of the range) **/
         template <std::ranges::input_range R>
         queue(R&&)
             requires(std::convertible_to<std::ranges::range_value_t<R>, T>);
     //  -----------------------------------------------------------------------
-        queue(queue const&);
     //  -----------------------------------------------------------------------
-        queue(queue&&) noexcept;
+
+
+
     //  -----------------------------------------------------------------------
+    //  -----------------------------------------------------------------------
+        /** ASSIGNMENT OP ( copy-swap idiom ) **/
         auto operator=(queue) -> decltype(auto);
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
 
+
+public: /** **/
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
         template <class U>
@@ -250,7 +273,7 @@ public:
     //  -----------------------------------------------------------------------
         void debug() noexcept
         {
-            node_t v_node = m_head->m_next;
+            node_type* v_node = m_head->m_next;
 
             while (v_node != m_head)
             {
@@ -263,7 +286,7 @@ public:
     //  -----------------------------------------------------------------------
 
 private:
-    node_t m_head;
+    node_t    m_head;
     size_type m_size;
 };
 
@@ -276,10 +299,11 @@ private:
         : queue()
     {
         using std::placeholders::_1;
+        using std::ranges::for_each;
 
-        rng::for_each(p_begin, p_end,
-                    std::bind(&queue::template push_back<std::iter_reference_t<I>>,
-                                this, _1));
+        for_each(p_begin, p_end,
+                std::bind(&queue::template push_back<std::iter_reference_t<I>>,
+                            this, _1));
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -299,22 +323,21 @@ private:
 //  -----------------------------------------------------------------------
     template <class T>
     template <class U>
-    void queue<T>::push_back(U&& p_value)
-        requires(std::convertible_to<U, T>)
+    void queue<T>::push_back(U&& p_value) requires(std::convertible_to<U, T>)
     {
-        node_t v_node = nullptr;
+        node_type* v_node = nullptr;
 
         try {
             v_node = new node_type(std::forward<U>(p_value));
-        } catch (...) {
+        }
+        catch (...) {
             v_node = (delete v_node, nullptr);
-
             throw;
         }
 
         m_head->push_back(v_node);
 
-        m_size = -(~m_size);
+        m_size = m_size + 1ul;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -323,8 +346,7 @@ private:
 //  -----------------------------------------------------------------------
     template <class T>
     template <class U>
-    void queue<T>::push(U&& p_value)
-        requires(std::convertible_to<U, T>)
+    void queue<T>::push(U&& p_value) requires(std::convertible_to<U, T>)
     {
         push_back(std::forward<U>(p_value));
     }
@@ -338,19 +360,19 @@ private:
     void queue<T>::emplace_back(ARGS&&... p_args)
         requires(is_class<T> && std::constructible_from<T, ARGS...>)
     {
-        node_t v_node = nullptr;
+        node_type* v_node = nullptr;
 
         try {
             v_node = new node_type(std::forward<ARGS>(p_args)...);
-        } catch (...) {
+        }
+        catch (...) {
             v_node = (delete v_node, nullptr);
-
             throw;
         }
 
         m_head->push_back(v_node);
 
-        m_size = -(~m_size);
+        m_size = m_size + 1ul;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------

@@ -16,9 +16,9 @@
         try {
             m_head = new node_type{};
             m_size = 0ul;
-        } catch (...) {
+        }
+        catch (...) {
             m_head = (delete m_head, nullptr);
-
             throw;
         }
     }
@@ -30,16 +30,16 @@
     template <class T>
     queue<T>::queue(queue const& p_outer) : queue()
     {
-        node_t v_curr = p_outer.m_head->m_next;
-        node_t v_node = nullptr;
+        node_type* v_curr = p_outer.m_head->m_next;
+        node_type* v_node = nullptr;
 
         while (v_curr != p_outer.m_head)
         {
             try {
                 v_node = new node_type(v_curr->m_data);
-            } catch (...) {
+            }
+            catch (...) {
                 v_node = (delete v_node, nullptr);
-
                 throw;
             }
 
@@ -82,14 +82,14 @@
     {
         assert(not empty());
 
-        node_t v_curr = m_head->m_next;
+        node_type* v_curr = m_head->m_next;
 
         m_head->m_next         = v_curr->m_next;
         v_curr->m_next->m_prev = m_head;
 
         v_curr = (delete v_curr, nullptr);
 
-        m_size = ~(-m_size);
+        m_size = m_size - 1ul;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------

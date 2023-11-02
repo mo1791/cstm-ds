@@ -37,6 +37,7 @@
         : binary_search_tree()
     {
         m_root = clone(p_outer.m_root);
+        m_size = p_outer.m_size;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
@@ -126,7 +127,7 @@
                 return;
             }
 
-            node_t *v_parent = v_current->m_parent;
+            node_type* v_parent = v_current->m_parent;
 
             if ((not v_current->m_left) && (not v_current->m_right))
             {
@@ -141,7 +142,7 @@
 
                 v_current = (delete v_current, nullptr);
 
-                m_size = ~(-m_size);
+                m_size = m_size - 1ul;
 
                 return;
             }
@@ -161,14 +162,14 @@
 
                 v_current = (delete v_current, nullptr);
 
-                m_size = ~(-m_size);
+                m_size = m_size - 1ul;
 
                 return;
             }
 
             if ((v_current->m_left != nullptr) && (v_current->m_right != nullptr))
             {
-                node_t *v_temp = v_current->m_right;
+                node_type* v_temp = v_current->m_right;
 
                 v_parent = nullptr;
 
@@ -200,7 +201,7 @@
 
                 v_temp = (delete v_temp, nullptr);
 
-                m_size = ~(-m_size);
+                m_size = m_size - 1ul;
 
                 return;
             }
@@ -215,7 +216,7 @@
     template <std::totally_ordered T>
     void binary_search_tree<T>::clear() noexcept
     {
-        node_t *v_current = m_root, *v_temp = nullptr;
+        node_type *v_current = m_root, *v_temp = nullptr;
 
         while (v_current != nullptr)
         {
@@ -248,7 +249,7 @@
     {
         if (not m_root) return;
 
-        node_t *v_current = m_root, *v_temp = nullptr;
+        node_type *v_current = m_root, *v_temp = nullptr;
 
         // iterating tree nodes
         while (v_current != nullptr)
@@ -303,7 +304,7 @@
     {
         if (not m_root) return;
 
-        node_t *v_current = m_root, *v_temp = nullptr;
+        node_type *v_current = m_root, *v_temp = nullptr;
 
         // iterating tree nodes
         while (v_current != nullptr)
@@ -359,7 +360,7 @@
         if (not m_root) return;
 
         // Create a dummy node
-        node_t *v_dummy = nullptr;
+        node_type *v_dummy = nullptr;
 
         try {
             v_dummy = new node_t{};
@@ -369,14 +370,15 @@
             throw;
         }
 
-        v_dummy->m_left   = m_root;
-        node_t *v_current = v_dummy;
+        v_dummy->m_left = m_root;
+        
+        node_type *v_current = v_dummy;
 
         // Define some useful variables
-        node_t *v_parent = nullptr;
-        node_t *v_middle = nullptr;
-        node_t *v_temp   = nullptr;
-        node_t *v_back   = nullptr;
+        node_type *v_parent = nullptr;
+        node_type *v_middle = nullptr;
+        node_type *v_temp   = nullptr;
+        node_type *v_back   = nullptr;
 
         // iterating tree nodes
         while (v_current != nullptr)
@@ -449,7 +451,7 @@
     /** TREE SIZE **/
     template <std::totally_ordered T>
     [[nodiscard]] constexpr auto binary_search_tree<T>::size() const noexcept
-        -> std::size_t
+        -> typename binary_search_tree::size_type
     {
         return m_size;
     }
@@ -506,16 +508,6 @@
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
 
-//  -----------------------------------------------------------------------
-//  -----------------------------------------------------------------------
-    /** CLONE TREE **/
-    template <std::totally_ordered T>
-    [[nodiscard]] auto binary_search_tree<T>::clone() const -> node_t *
-    {
-        return clone(m_root);
-    }
-//  -----------------------------------------------------------------------
-//  -----------------------------------------------------------------------
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------

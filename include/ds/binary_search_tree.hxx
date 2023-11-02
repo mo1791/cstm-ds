@@ -27,21 +27,23 @@ template <std::totally_ordered> struct binary_search_tree;
 template <class T> struct node final
 {
 
+public:
     friend struct binary_search_tree<T>;
 
-public:
+public: /** TYPE ALIAS **/
     using value_type      = T;
     using reference       = typename std::add_lvalue_reference<T>::type;
     using const_reference = typename std::add_lvalue_reference<typename std::add_const<T>::type>::type;
     using pointer         = typename std::add_pointer<T>::type;
     using const_pointer   = typename std::add_pointer<typename std::add_const<T>::type>::type;
 
-   public:
+
+public: /** CONSTRUCTORS **/
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
         /** DEFAULT CTOR **/
         node() noexcept
-            requires(std::default_initializable<T>)
+        requires(std::default_initializable<T>)
             : m_data(T{})
             , m_left(nullptr)
             , m_right(nullptr)
@@ -50,7 +52,7 @@ public:
     //  -----------------------------------------------------------------------
         /** PARAM CTOR **/
         explicit node(T const& data) noexcept
-            requires(std::copy_constructible<T>)
+        requires(std::copy_constructible<T>)
             : m_data(data)
             , m_left(nullptr)
             , m_right(nullptr)
@@ -59,7 +61,7 @@ public:
     //  -----------------------------------------------------------------------
         /** PARAM CTOR ( rvalue ref ) **/
         explicit node(T&& data) noexcept
-            requires(std::move_constructible<T>)
+        requires(std::move_constructible<T>)
             : m_data(std::move(data)),
             m_left(nullptr),
             m_right(nullptr),
@@ -69,7 +71,7 @@ public:
         /** **/
         template <class... ARGS>
         node(ARGS&&... p_args) noexcept
-            requires(is_class<T> && std::constructible_from<T, ARGS...>)
+        requires(is_class<T> && std::constructible_from<T, ARGS...>)
             : m_data(std::forward<ARGS>(p_args)...)
             , m_left(nullptr)
             , m_right(nullptr)
@@ -92,32 +94,32 @@ template <std::totally_ordered T>
 struct binary_search_tree
 {
 
-public:
-    using node_t = node<T>;
+public: /** TYPE ALIAS **/
+    using node_type = node<T>;
 
-public:
-    using value_type      = T;
-    using reference       = typename std::add_lvalue_reference<T>::type;
-    using const_reference = typename std::add_lvalue_reference<typename std::add_const<T>::type>::type;
-    using pointer         = typename std::add_pointer<T>::type;
-    using const_pointer   = typename std::add_pointer<typename std::add_const<T>::type>::type;
+public: /** TYPE ALIAS **/
+    using value_type      = typename node_type::value_type;
+    using reference       = typename node_type::reference;
+    using const_reference = typename node_type::const_reference;
+    using pointer         = typename node_type::pointer;
+    using const_pointer   = typename node_type::const_pointer;
     using size_type       = std::size_t;
 
-   public:
+public: /** CONSTRUCTORS **/
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
         /** DEFAULT CTOR **/
         binary_search_tree() noexcept;
     //  -----------------------------------------------------------------------
-        /** INITIALIZER_LIST CTOR **/
+        /** INITIALIZER_LIST CTOR (Construct with the contents of the initializer list) **/
         binary_search_tree(std::initializer_list<T> /* list */);
     //  -----------------------------------------------------------------------
-        /** RANGE TYPE CTOR  **/
+        /** RANGE TYPE CTOR  (Construct with the contents of the range) **/
         template <rng::range R>
         binary_search_tree(R&& /* range */)
             requires(std::convertible_to<rng::range_value_t<R>, T>);
     //  -----------------------------------------------------------------------
-    /**  ITERATOR TYPE CTOR **/
+    /**  RANGE CTOR (Construct with the contents of the range [ begin, end ]) **/
         template <std::input_iterator I, std::sentinel_for<I> S>
         binary_search_tree(I /* begin */, S /* end */)
             requires(std::convertible_to<std::iter_value_t<I>, T>);
@@ -133,6 +135,8 @@ public:
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
 
+
+public: /** MEMBER FUNCTION **/
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
         /** INSERTING A NODE IN TREE **/
@@ -147,12 +151,14 @@ public:
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
 
+
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
         /** SEARCH FOR A NODE IN TREE **/
         auto search(T const& /* key */) noexcept -> std::optional<T>;
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
+
 
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
@@ -164,6 +170,8 @@ public:
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
 
+
+public:
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
         /** PRINT TREE NODES IN INORDER **/
@@ -177,44 +185,34 @@ public:
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
 
+
+public:
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
-        /** EMPTYNESS CHECK **/
         [[nodiscard]] constexpr auto empty() const noexcept -> bool;
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
 
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
-        /** TREE SIZE **/
         [[nodiscard]] constexpr auto size() const noexcept -> size_type;
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
 
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
-        /** MAX DATA VALUE **/
         [[nodiscard]] auto max() const noexcept -> std::optional<T>;
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
 
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
-        /** MIN DATA VALUE **/
         [[nodiscard]] auto min() const noexcept -> std::optional<T>;
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
 
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
-        /** CLONE BINARY TREE **/
-        [[nodiscard]] auto clone() const -> node_t*;
-    //  -----------------------------------------------------------------------
-    //  -----------------------------------------------------------------------
-
-    //  -----------------------------------------------------------------------
-    //  -----------------------------------------------------------------------
-        /** DTOR **/
         ~binary_search_tree() noexcept;
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
@@ -222,22 +220,21 @@ public:
 private:
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
-        /** CLONE BINARY TREE ( HELPER ) **/
-        [[nodiscard]] auto clone(node_t* p_root) const -> node_t*
+        [[nodiscard]] auto clone(node_type* p_root) const -> node_type*
         {
-            node_t* v_node = nullptr;
+            node_type* v_node = nullptr;
 
             if (p_root != nullptr)
             {
                 try {
-                    auto v_current = new node_t(p_root->m_data);
+                    auto v_current = new node_type(p_root->m_data);
                     auto v_copy = v_current;
 
                     while (p_root != nullptr)
                     {
                         if ((p_root->m_left != nullptr) && (not v_copy->m_left))
                         {
-                            v_node = new node_t(p_root->m_left->m_data);
+                            v_node = new node_type(p_root->m_left->m_data);
 
                             v_copy->m_left           = v_node;
                             v_copy->m_left->m_parent = v_copy;
@@ -248,7 +245,7 @@ private:
                         else if ((p_root->m_right != nullptr) &&
                                 (not v_copy->m_right))
                         {
-                            v_node = new node_t(p_root->m_right->m_data);
+                            v_node = new node_type(p_root->m_right->m_data);
 
                             v_copy->m_right           = v_node;
                             v_copy->m_right->m_parent = v_copy;
@@ -265,9 +262,9 @@ private:
 
                     return v_current;
 
-                } catch (...) {
+                }
+                catch (...) {
                     v_node = (delete v_node, nullptr);
-
                     throw;
                 }
             }
@@ -279,7 +276,6 @@ private:
 
     //  -----------------------------------------------------------------------
     //  -----------------------------------------------------------------------
-        /** SWAP **/
         void swap(binary_search_tree& p_lhs, binary_search_tree& p_rhs) noexcept
         {
             using std::swap;
@@ -291,8 +287,8 @@ private:
     //  -----------------------------------------------------------------------
 
 private:
-    node_t* m_root;
-    size_type m_size;
+    node_type* m_root;
+    size_type  m_size;
 };
 
 /** END TREE **/
@@ -301,7 +297,6 @@ private:
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    /** **/
     template <std::totally_ordered T>
     template <rng::range R>
     binary_search_tree<T>::binary_search_tree(R&& p_range)
@@ -313,7 +308,6 @@ private:
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    /** **/
     template <std::totally_ordered T>
     template <std::input_iterator I, std::sentinel_for<I> S>
     binary_search_tree<T>::binary_search_tree(I p_begin, S p_end)
@@ -321,41 +315,41 @@ private:
         : binary_search_tree()
     {
         using std::placeholders::_1;
+        using std::ranges::for_each;
 
-        rng::for_each(p_begin, p_end,
-                    std::bind(&binary_search_tree::template insert<std::iter_reference_t<I>>,
-                                this, _1));
+        for_each(p_begin, p_end,
+                std::bind(&binary_search_tree::template insert<std::iter_reference_t<I>>,
+                          this, _1));
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    /** **/
     template <std::totally_ordered T>
     template <class U>
     void binary_search_tree<T>::insert(U&& p_data)
         requires(std::convertible_to<std::decay_t<U>, T>)
     {
-        node_t* v_node = nullptr;
+        node_type* v_node = nullptr;
 
-        try {
-            v_node = new node_t(std::forward<U>(p_data));
-        } catch (...) {
+        try{
+            v_node = new node_type(std::forward<U>(p_data));
+        }
+        catch (...) {
             v_node = (delete v_node, nullptr);
-
             throw;
         }
 
         if (not m_root)
         {
             m_root = v_node;
-            m_size = -(~m_size);
+            m_size = m_size + 1ul;
 
             return;
         }
 
-        node_t *v_current = m_root, *v_parent = nullptr;
+        node_type *v_current = m_root, *v_parent = nullptr;
 
         while (v_current != nullptr)
         {
@@ -376,7 +370,7 @@ private:
         if (not v_parent)
         {
             v_parent = v_node;
-            m_size   = -(~m_size);
+            m_size   = m_size + 1ul;
 
             return;
         }
@@ -390,38 +384,37 @@ private:
             v_parent->m_right = v_node;
         }
 
-        m_size = -(~m_size);
+        m_size = m_size + 1ul;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
 
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
-    /** **/
     template <std::totally_ordered T>
     template <class... Args>
     void binary_search_tree<T>::emplace(Args&&... p_args)
         requires(is_class<T> && std::constructible_from<T, Args...>)
     {
-        node_t* v_node = nullptr;
+        node_type* v_node = nullptr;
 
         try {
-            v_node = new node_t(std::forward<Args>(p_args)...);
-        } catch (...) {
+            v_node = new node_type(std::forward<Args>(p_args)...);
+        }
+        catch (...) {
             v_node = (delete v_node, nullptr);
-
             throw;
         }
 
         if (not m_root)
         {
             m_root = v_node;
-            m_size = -(~m_size);
+            m_size = m_size + 1ul;
 
             return;
         }
 
-        node_t *v_current = m_root, *v_parent = nullptr;
+        node_type *v_current = m_root, *v_parent = nullptr;
 
         while (v_current != nullptr)
         {
@@ -442,7 +435,7 @@ private:
         if (not v_parent)
         {
             v_parent = v_node;
-            m_size   = -(~m_size);
+            m_size   = m_size + 1ul;
 
             return;
         }
@@ -456,7 +449,7 @@ private:
             v_parent->m_right = v_node;
         }
 
-        m_size = -(~m_size);
+        m_size = m_size + 1ul;
     }
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
