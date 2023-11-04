@@ -2,8 +2,8 @@
 
 `` ``
 
-List     [Test](https://godbolt.org/z/Mxc6E9MoW)\
-Queue    [Test](https://godbolt.org/z/4KevKr6o4)\
-Stack    [Test](https://godbolt.org/z/Kn5MEfY4n)\
-BS Tree  [Test](https://godbolt.org/z/W75cTG9sv)\
-Frwd Lis [Test](https://godbolt.org/z/vWhad513h)
+List     [Test](https://godbolt.org/z/7cPxaso71)\
+Queue    [Test](https://godbolt.org/z/1ceha99q3)\
+Stack    [Test](https://godbolt.org/z/37WG9jEc5)\
+BS Tree  [Test](https://godbolt.org/z/xG1dh4G5E)\
+Frwd Lis [Test](https://godbolt.org/z/e878WqcbP)
