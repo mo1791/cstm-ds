@@ -23,10 +23,6 @@ template <class> class Backward;
 
 /* START CONSTRAINTS */
 
-template <class T>
-concept is_class = std::is_class<T>::value;
-
-
 template <class T, class U>
 concept non_self =
         not std::is_same<std::decay_t<T>, U>::value &&
@@ -82,8 +78,8 @@ public: /** CONSTRUCTORS **/
 //  --------------------------------------------------------------------------
     /** **/
     template <class... ARGS>
-    node(ARGS &&...p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
+    node(std::in_place_t, ARGS &&...p_args) noexcept
+    requires(std::constructible_from<T, ARGS...>)
         : m_data{T{std::forward<ARGS>(p_args)...}}
         , m_prev{this}
         , m_next{this}
@@ -447,24 +443,19 @@ public:
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
     template <class... ARGS>
-    void emplace_back(ARGS&& ...) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>);
+    void emplace_back(ARGS&& ...) noexcept;
 //  --------------------------------------------------------------------------
     template <class... ARGS>
-    void emplace_front(ARGS&& ...) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>);
+    void emplace_front(ARGS&& ...) noexcept;
 //  --------------------------------------------------------------------------
     template <class... ARGS>
-    void emplace_before(std::integral auto, ARGS&& ...) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>);
+    void emplace_before(std::integral auto, ARGS&& ...) noexcept;
 //  --------------------------------------------------------------------------
     template <class... ARGS>
-    void emplace_after(std::integral auto, ARGS&& ...) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>);
+    void emplace_after(std::integral auto, ARGS&& ...) noexcept;
 //  --------------------------------------------------------------------------
     template <class... ARGS>
-    void emplace_at(std::integral auto, ARGS&& ...) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>);
+    void emplace_at(std::integral auto, ARGS&& ...) noexcept;
 //  --------------------------------------------------------------------------
 //  --------------------------------------------------------------------------
 
@@ -713,11 +704,10 @@ void list<T>::push_at(U&& p_data, std::integral auto p_pos) noexcept
 template <class T>
 template <class... ARGS>
 void list<T>::emplace_front(ARGS&& ...p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
 {
     if ( not m_head ) return;
 
-    if ( auto v_node = new node_type(std::forward<ARGS>(p_args)...) )
+    if ( auto v_node = new node_type(std::in_place,std::forward<ARGS>(p_args)...) )
     {
         m_head->push_front(v_node);
         
@@ -728,11 +718,10 @@ void list<T>::emplace_front(ARGS&& ...p_args) noexcept
 template <class T>
 template <class... ARGS>
 void list<T>::emplace_back(ARGS&& ...p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
 {
     if ( not m_head ) return;
 
-    if ( auto v_node = new node_type(std::forward<ARGS>(p_args)...) )
+    if ( auto v_node = new node_type(std::in_place, std::forward<ARGS>(p_args)...) )
     {
         m_head->push_back(v_node);
         
@@ -743,11 +732,10 @@ void list<T>::emplace_back(ARGS&& ...p_args) noexcept
 template <class T>
 template <class... ARGS>
 void list<T>::emplace_before(std::integral auto p_pos, ARGS&& ...p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
 {
     if ( not m_head ) return;
 
-    if ( auto v_node = new node_type(std::forward<ARGS>(p_args)...) )
+    if ( auto v_node = new node_type(std::in_place, std::forward<ARGS>(p_args)...) )
     {
         find_at(p_pos)->push_back(v_node);
         
@@ -758,11 +746,10 @@ void list<T>::emplace_before(std::integral auto p_pos, ARGS&& ...p_args) noexcep
 template <class T>
 template <class... ARGS>
 void list<T>::emplace_after(std::integral auto p_pos, ARGS&& ...p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
 {
     if ( not m_head ) return;
 
-    if ( auto v_node = new node_type(std::forward<ARGS>(p_args)...) )
+    if ( auto v_node = new node_type(std::in_place, std::forward<ARGS>(p_args)...) )
     {
         find_at(p_pos)->push_front(v_node);
         
@@ -774,7 +761,6 @@ void list<T>::emplace_after(std::integral auto p_pos, ARGS&& ...p_args) noexcept
 template <class T>
 template <class... ARGS>
 void list<T>::emplace_at(std::integral auto p_pos, ARGS&& ...p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
 {
     if ( not m_head ) return;
 }

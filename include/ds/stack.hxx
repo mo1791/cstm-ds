@@ -11,18 +11,7 @@
 #include <string>
 
 
-
-/* START CONSTRAINTS */
-
-template <class T>
-concept is_class = std::is_class<typename std::decay<T>::type>::value;
-
-/* END CONSTRAINTS */
-
-
-
 template <class> class stack;
-
 
 
 // START NODE
@@ -67,8 +56,8 @@ public: /** CONSTRUCTORS **/
 //  -------------------------------------------------------------------------
     /** **/
     template <class... ARGS>
-    node(ARGS &&...p_args) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>)
+    node(std::in_place_t,  &&...p_args) noexcept
+        requires(std::constructible_from<T, ARGS...>)
         : m_data{std::forward<ARGS>(p_args)...}
         , m_next{nullptr}
     {}
@@ -173,12 +162,10 @@ public:
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
     template <class... ARGS>
-    void emplace_front(ARGS &&...) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>);
+    void emplace_front(ARGS &&...) noexcept;
 //  -------------------------------------------------------------------------
     template <class... ARGS>
-    void emplace(ARGS &&...) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>);
+    void emplace(ARGS &&...) noexcept;
 //  -------------------------------------------------------------------------
 //  -------------------------------------------------------------------------
 
@@ -311,9 +298,8 @@ void stack<T>::push(U &&p_value) noexcept requires(std::convertible_to<U, T>)
 template <class T>
 template <class... ARGS>
 void stack<T>::emplace_front(ARGS &&...p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
 {
-    if ( auto v_node = new node_type(std::forward<ARGS>(p_args)...) )
+    if ( auto v_node = new node_type(std::in_place, std::forward<ARGS>(p_args)...) )
     {
         v_node->m_next = m_head;
         m_head         = v_node;
@@ -326,7 +312,6 @@ void stack<T>::emplace_front(ARGS &&...p_args) noexcept
 template <class T>
 template <class... ARGS>
 void stack<T>::emplace(ARGS &&...p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
 {
     emplace_front(std::forward<ARGS>(p_args)...);
 }

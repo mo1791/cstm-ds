@@ -16,15 +16,6 @@
 
 template <class> class queue;
 
-
-/* START CONSTRAINTS */
-
-template <class T> concept is_class = std::is_class<T>::value;
-
-/* END CONSTRAINTS */
-
-
-
 //
 // START NODE
 //
@@ -70,8 +61,8 @@ public: /** CONSTRUCTORS **/
 //  --------------------------------------------------------------------------
     /** **/
     template <class... ARGS>
-    node(ARGS&&... p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
+    node(std::in_place_t, &&... p_args) noexcept
+    requires(std::constructible_from<T, ARGS...>)
         : m_data{T{std::forward<ARGS>(p_args)...}}
         , m_prev{this}
         , m_next{this}
@@ -196,12 +187,10 @@ public: /** **/
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
     template <class... ARGS>
-    void emplace_back(ARGS&&...) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>);
+    void emplace_back(ARGS&&...) noexcept;
 //  -----------------------------------------------------------------------
     template <class... ARGS>
-    void emplace(ARGS&&...) noexcept
-        requires(is_class<T> && std::constructible_from<T, ARGS...>);
+    void emplace(ARGS&&...) noexcept;
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
 
@@ -351,11 +340,10 @@ void queue<T>::push(U&& p_value) noexcept requires(std::convertible_to<U, T>)
 template <class T>
 template <class... ARGS>
 void queue<T>::emplace_back(ARGS&&... p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
 {
     if (not m_head) return;
     
-    if ( auto v_node = new node_type(std::forward<ARGS>(p_args)...) )
+    if ( auto v_node = new node_type(std::in_place, std::forward<ARGS>(p_args)...) )
     {
         m_head->push_back(v_node);
 
@@ -367,7 +355,6 @@ void queue<T>::emplace_back(ARGS&&... p_args) noexcept
 template <class T>
 template <class... ARGS>
 void queue<T>::emplace(ARGS&&... p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
 {
     emplace_front(std::forward<ARGS>(p_args)...);
 }

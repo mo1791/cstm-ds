@@ -11,15 +11,6 @@
 
 
 
-/** START CONCEPT **/
-
-/** IS_CLASS CONCEPT (satisfied if and only if T is a CLASS type) **/
-template <class T> concept is_class = std::is_class_v<T>;
-
-/** END CONCEPTS **/
-
-
-
 /** FROWARD DECL **/
 template <std::totally_ordered> struct binary_search_tree;
 
@@ -70,8 +61,8 @@ public: /** CONSTRUCTORS **/
 //  -----------------------------------------------------------------------
     /** **/
     template <class... ARGS>
-    node(ARGS&&... p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, ARGS...>)
+    node(std::in_place_t, &&... p_args) noexcept
+    requires(std::constructible_from<T, ARGS...>)
         : m_data(std::forward<ARGS>(p_args)...)
         , m_left(nullptr)
         , m_right(nullptr)
@@ -154,8 +145,7 @@ public: /** MEMBER FUNCTION **/
 //  -----------------------------------------------------------------------
     /** INSERTING A NODE IN TREE ( construct in place ) **/
     template <class... Args>
-    void emplace(Args&&... /* args */) noexcept
-        requires(is_class<T> && std::constructible_from<T, Args...>);
+    void emplace(Args&&... /* args */) noexcept;
 //  -----------------------------------------------------------------------
 //  -----------------------------------------------------------------------
 
@@ -386,10 +376,9 @@ void binary_search_tree<T>::insert(U&& p_data) noexcept
 template <std::totally_ordered T>
 template <class... Args>
 void binary_search_tree<T>::emplace(Args&&... p_args) noexcept
-    requires(is_class<T> && std::constructible_from<T, Args...>)
 {
 
-    if ( auto v_node = new(std::nothrow) node_type(std::forward<Args>(p_args)...) )
+    if ( auto v_node = new(std::nothrow) node_type(std::in_place, std::forward<Args>(p_args)...) )
     {
         if (not m_root)
         {
