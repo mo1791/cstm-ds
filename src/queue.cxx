@@ -1,16 +1,11 @@
-//  ---------------------------------
-//  ---------------------------------
-        #include <ds/queue.hxx>
-//  ---------------------------------
-//  ---------------------------------
+
+#include <ds/queue.hxx>
 
 
 // start queue
-// start queue
-//  
 //  
 template <class T>
-queue<T>::queue() noexcept
+queue<T>::queue() noexcept(std::is_nothrow_default_constructible<T>::value)
     : m_head( new(std::nothrow) node_type{} )
     , m_size( 0ul )
 {}
@@ -18,7 +13,8 @@ queue<T>::queue() noexcept
  
 //  
 template <class T>
-queue<T>::queue(queue const& p_outer) noexcept : queue()
+queue<T>::queue(queue const& p_outer)
+    noexcept(std::is_nothrow_copy_constructible<T>::value) : queue()
 {
     node_type* v_curr = p_outer.m_head->m_next;
     node_type* v_node = nullptr;
@@ -40,7 +36,7 @@ queue<T>::queue(queue const& p_outer) noexcept : queue()
 
 //  
 template <class T>
-queue<T>::queue(queue&& p_outer)  noexcept : queue()
+queue<T>::queue(queue&& p_outer)  noexcept(true) : queue()
 {
     swap(*this, p_outer);
 }
@@ -48,7 +44,8 @@ queue<T>::queue(queue&& p_outer)  noexcept : queue()
 
 //  
 template <class T>
-auto queue<T>::operator=(queue p_rhs) noexcept -> queue &
+auto queue<T>::operator=(queue p_rhs)
+    noexcept(std::is_nothrow_copy_constructible<T>::value) -> queue &
 {
     swap(*this, p_rhs);
 
@@ -58,7 +55,7 @@ auto queue<T>::operator=(queue p_rhs) noexcept -> queue &
 
 //  
 template <class T>
-void queue<T>::pop_front() noexcept
+void queue<T>::pop_front() noexcept(std::is_nothrow_destructible<T>::value)
 {
     assert(not empty());
 
@@ -75,7 +72,7 @@ void queue<T>::pop_front() noexcept
  
 //  
 template <class T>
-void queue<T>::pop() noexcept
+void queue<T>::pop() noexcept(std::is_nothrow_destructible<T>::value)
 {
     pop_front();
 }
@@ -83,7 +80,7 @@ void queue<T>::pop() noexcept
  
 //  
 template <class T>
-[[nodiscard]] auto queue<T>::empty() const noexcept -> bool
+[[nodiscard]] auto queue<T>::empty() const noexcept(true) -> bool
 {
     return ((m_head == m_head->m_prev) && (m_head == m_head->m_next));
 }
@@ -91,7 +88,7 @@ template <class T>
  
 //  
 template <class T>
-[[nodiscard]] auto queue<T>::size() const noexcept 
+[[nodiscard]] auto queue<T>::size() const noexcept(true)
     -> typename queue::size_type
 {
     return m_size;
@@ -100,7 +97,7 @@ template <class T>
  
 //  
 template <class T>
-[[nodiscard]] auto queue<T>::peek() const noexcept
+[[nodiscard]] auto queue<T>::peek() const noexcept(true)
     -> std::optional<typename queue::value_type>
 {
     return not empty()  ? std::optional{m_head->m_next->data()}
@@ -108,7 +105,7 @@ template <class T>
 }
 //  
 template <class T>
-[[nodiscard]] auto queue<T>::peek() noexcept
+[[nodiscard]] auto queue<T>::peek() noexcept(true)
     -> std::optional<typename queue::value_type>
 {
     return not empty()  ? std::optional{m_head->m_next->data()}
@@ -118,7 +115,7 @@ template <class T>
   
 //  
 template <class T>
-[[nodiscard]] auto queue<T>::front() noexcept
+[[nodiscard]] auto queue<T>::front() noexcept(true)
     -> std::optional<typename queue::value_type>
 {
     return peek();
@@ -127,7 +124,7 @@ template <class T>
 
 //  
 template <class T>
-[[nodiscard]] auto queue<T>::front() const noexcept
+[[nodiscard]] auto queue<T>::front() const noexcept(true)
     -> std::optional<typename queue::value_type>
 {
     return peek();
@@ -136,7 +133,7 @@ template <class T>
  
 //  
 template <class T>
-[[nodiscard]] auto queue<T>::back() noexcept
+[[nodiscard]] auto queue<T>::back() noexcept(true)
     -> std::optional<typename queue::value_type>
 {
     return not empty()  ? std::optional{m_head->m_prev->data()}
@@ -146,7 +143,7 @@ template <class T>
 
 //  
 template <class T>
-[[nodiscard]] auto queue<T>::back() const noexcept
+[[nodiscard]] auto queue<T>::back() const noexcept(true)
     -> std::optional<typename queue::value_type>
 {
     return not empty()  ? std::optional{m_head->m_prev->data()}
@@ -156,7 +153,7 @@ template <class T>
  
 //  
 template <class T>
-queue<T>::~queue() noexcept
+queue<T>::~queue() noexcept(std::is_nothrow_destructible<T>::value)
 {
     while (not empty())
     {
@@ -166,9 +163,7 @@ queue<T>::~queue() noexcept
     m_head = (delete m_head, nullptr);
 }
 //  
-//  
 
-//  
 //  
 template class queue<int>;
 template class queue<char>;
