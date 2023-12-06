@@ -14,7 +14,7 @@
 
 //
 template <std::totally_ordered T>
-binary_search_tree<T>::binary_search_tree() noexcept
+binary_search_tree<T>::binary_search_tree() noexcept(true)
     : m_root(nullptr)
     , m_size(0ul)
 {}
@@ -22,37 +22,35 @@ binary_search_tree<T>::binary_search_tree() noexcept
 
 //
 template <std::totally_ordered T>
-binary_search_tree<T>::binary_search_tree(
-                                std::initializer_list<T> p_list)
-    noexcept : binary_search_tree(
-                        std::ranges::begin(p_list),
-                        std::ranges::end(p_list))
-{}
+binary_search_tree<T>::binary_search_tree( std::initializer_list<T> p_list)
+        noexcept(std::is_nothrow_copy_constructible<T>::value)
+    : binary_search_tree(std::ranges::begin(p_list), std::ranges::end(p_list)) {
+}
 
 
 //
 template <std::totally_ordered T>
-binary_search_tree<T>::binary_search_tree(binary_search_tree const &p_outer)
-    noexcept : binary_search_tree()
+binary_search_tree<T>::binary_search_tree(binary_search_tree const& p_outer)
+        noexcept(std::is_nothrow_copy_constructible<T>::value)
+    : binary_search_tree()
 {
     m_root = clone(p_outer.m_root);
     m_size = p_outer.m_size;
 }
 
-
 //
 template <std::totally_ordered T>
-binary_search_tree<T>::binary_search_tree(binary_search_tree &&p_outer)
-    noexcept : binary_search_tree()
+binary_search_tree<T>::binary_search_tree(
+    binary_search_tree &&p_outer) noexcept(true)
+    : binary_search_tree()
 {
     swap(*this, p_outer);
 }
 
-
 //
 template <std::totally_ordered T>
-auto binary_search_tree<T>::operator=(binary_search_tree p_rhs) noexcept
-    -> binary_search_tree &
+auto binary_search_tree<T>::operator=(binary_search_tree p_rhs) noexcept(
+    std::is_nothrow_copy_constructible<T>::value) -> binary_search_tree &
 {
     swap(*this, p_rhs);
 
@@ -62,7 +60,7 @@ auto binary_search_tree<T>::operator=(binary_search_tree p_rhs) noexcept
 
 //
 template <std::totally_ordered T>
-auto binary_search_tree<T>::search(T const &p_key) const noexcept
+auto binary_search_tree<T>::search(T const &p_key) const noexcept(true)
     -> std::optional<typename binary_search_tree::value_type>
 {
     if (auto v_current = m_root)
@@ -90,7 +88,7 @@ auto binary_search_tree<T>::search(T const &p_key) const noexcept
 
 //
 template <std::totally_ordered T>
-void binary_search_tree<T>::remove(T const &p_key) noexcept
+void binary_search_tree<T>::remove(T const &p_key) noexcept(std::is_nothrow_destructible<T>::value)
 {
     if (auto v_current = m_root)
     {
@@ -191,7 +189,7 @@ void binary_search_tree<T>::remove(T const &p_key) noexcept
 
 //
 template <std::totally_ordered T>
-void binary_search_tree<T>::clear() noexcept
+void binary_search_tree<T>::clear() noexcept(std::is_nothrow_destructible<T>::value)
 {
     node_type *v_current = m_root, *v_temp = nullptr;
 
@@ -218,7 +216,7 @@ void binary_search_tree<T>::clear() noexcept
 
 //
 template <std::totally_ordered T>
-void binary_search_tree<T>::print_inorder() const noexcept
+void binary_search_tree<T>::print_inorder() const noexcept(true)
 {
     if (not m_root) return;
 
@@ -269,7 +267,7 @@ void binary_search_tree<T>::print_inorder() const noexcept
 
 //
 template <std::totally_ordered T>
-void binary_search_tree<T>::print_preorder() const noexcept
+void binary_search_tree<T>::print_preorder() const noexcept(true)
 {
     if (not m_root) return;
 
@@ -319,7 +317,7 @@ void binary_search_tree<T>::print_preorder() const noexcept
 
 //
 template <std::totally_ordered T>
-void binary_search_tree<T>::print_postorder() const noexcept
+void binary_search_tree<T>::print_postorder() const noexcept(true)
 {
     if (not m_root) return;
 
@@ -403,7 +401,7 @@ void binary_search_tree<T>::print_postorder() const noexcept
 
 //
 template <std::totally_ordered T>
-[[nodiscard]] constexpr auto binary_search_tree<T>::size() const noexcept 
+[[nodiscard]] constexpr auto binary_search_tree<T>::size() const noexcept(true)
     -> typename binary_search_tree::size_type
 {
     return m_size;
@@ -412,7 +410,7 @@ template <std::totally_ordered T>
 
 //
 template <std::totally_ordered T>
-[[nodiscard]] constexpr auto binary_search_tree<T>::empty() const noexcept -> bool
+[[nodiscard]] constexpr auto binary_search_tree<T>::empty() const noexcept(true) -> bool
 {
     return (not m_root);
 }
@@ -420,7 +418,7 @@ template <std::totally_ordered T>
 
 //
 template <std::totally_ordered T>
-[[nodiscard]] auto binary_search_tree<T>::max() const noexcept
+[[nodiscard]] auto binary_search_tree<T>::max() const noexcept(true)
     -> std::optional<typename binary_search_tree::value_type>
 {
     if (auto v_current = m_root)
@@ -437,7 +435,7 @@ template <std::totally_ordered T>
 
 //
 template <std::totally_ordered T>
-[[nodiscard]] auto binary_search_tree<T>::min() const noexcept
+[[nodiscard]] auto binary_search_tree<T>::min() const noexcept(true)
     -> std::optional<typename binary_search_tree::value_type>
 {
     if (auto v_current = m_root)
@@ -454,7 +452,7 @@ template <std::totally_ordered T>
 
 //
 template <std::totally_ordered T>
-binary_search_tree<T>::~binary_search_tree() noexcept
+binary_search_tree<T>::~binary_search_tree() noexcept(std::is_nothrow_destructible<T>::value)
 {
     clear();
 }
