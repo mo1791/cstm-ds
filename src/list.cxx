@@ -1,19 +1,11 @@
-//  -------------------------------
-//  -------------------------------
-        #include <ds/list.hxx>
-//  -------------------------------
-//  -------------------------------
+
+#include <ds/list.hxx>
 
 
 //  start linked_list
 
-//  //
-/*** start list ***/
-// //
-//  
-//  
 template <class T>
-list<T>::list() noexcept
+list<T>::list() noexcept(std::is_nothrow_default_constructible<T>::value)
     : m_head(new(std::nothrow) node_type{})
     , m_size( 0ul )
 {}
@@ -21,21 +13,22 @@ list<T>::list() noexcept
  
 //  
 template <class T>
-list<T>::list(std::initializer_list<T> p_list) noexcept
+list<T>::list(std::initializer_list<T> p_list)
+        noexcept(std::is_nothrow_copy_constructible<T>::value)
     : list(std::ranges::begin(p_list), std::ranges::end(p_list))
 {}
 
 
 //  
 template <class T>
-list<T>::list(list const& p_outer) noexcept
+list<T>::list(list const& p_outer) noexcept(std::is_nothrow_copy_constructible<T>::value)
     : list(std::ranges::begin(p_outer), std::ranges::end(p_outer))
 {}
 
  
 //  
 template <class T>
-list<T>::list(list&& p_outer) noexcept : list{}
+list<T>::list(list&& p_outer) noexcept(true) : list{}
 {
     swap(*this, p_outer);
 }
@@ -43,7 +36,8 @@ list<T>::list(list&& p_outer) noexcept : list{}
  
 //  
 template <class T>
-auto list<T>::operator=(list p_list) noexcept -> list &
+auto list<T>::operator=(list p_list)
+    noexcept(std::is_nothrow_copy_constructible<T>::value) -> list &
 {
     swap(*this, p_list);
 
@@ -53,7 +47,7 @@ auto list<T>::operator=(list p_list) noexcept -> list &
 
 //  
 template <class T>
-void list<T>::pop_front() noexcept
+void list<T>::pop_front() noexcept(std::is_nothrow_destructible<T>::value)
 {
     assert(not empty());
 
@@ -70,7 +64,7 @@ void list<T>::pop_front() noexcept
  
 //  
 template <class T>
-void list<T>::pop_back() noexcept
+void list<T>::pop_back() noexcept(std::is_notrow_destructible<T>::value)
 {
     assert(not empty());
 
@@ -87,7 +81,7 @@ void list<T>::pop_back() noexcept
 
 //  
 template <class T>
-[[nodiscard]] auto list<T>::empty() const noexcept -> bool
+[[nodiscard]] auto list<T>::empty() const noexcept(true) -> bool
 {
     return ( (m_head == m_head->m_next) && (m_head == m_head->m_prev));
 }
@@ -95,7 +89,7 @@ template <class T>
  
 //  
 template <class T>
-[[nodiscard]] auto list<T>::size() const noexcept -> typename list::size_type
+[[nodiscard]] auto list<T>::size() const noexcept(true) -> typename list::size_type
 {
     return m_size;
 }
@@ -103,7 +97,7 @@ template <class T>
 
 //  
 template <class T>
-[[nodiscard]] auto list<T>::front() const noexcept
+[[nodiscard]] auto list<T>::front() const noexcept(true)
     -> std::optional<typename list::value_type>
 {
     return not empty()  ? std::optional{m_head->m_next->data()}
@@ -113,7 +107,7 @@ template <class T>
  
 //  
 template <class T>
-[[nodiscard]] auto list<T>::back() const noexcept
+[[nodiscard]] auto list<T>::back() const noexcept(true)
     -> std::optional<typename list::value_type>
 {
     return not empty()  ? std::optional{m_head->m_prev->data()}
@@ -123,7 +117,7 @@ template <class T>
  
 //  
 template <class T>
-auto list<T>::begin() noexcept -> typename list::iterator
+auto list<T>::begin() noexcept(true) -> typename list::iterator
 {
     return iterator{m_head->m_next};
 }
@@ -131,7 +125,7 @@ auto list<T>::begin() noexcept -> typename list::iterator
  
 //  
 template <class T>
-auto list<T>::begin() const noexcept -> typename list::iterator
+auto list<T>::begin() const noexcept(true) -> typename list::iterator
 {
     return iterator{m_head->m_next};
 }
@@ -139,7 +133,7 @@ auto list<T>::begin() const noexcept -> typename list::iterator
  
 //  
 template <class T>
-auto list<T>::end() noexcept -> typename list::iterator
+auto list<T>::end() noexcept(true) -> typename list::iterator
 {
     return iterator{m_head};
 }
@@ -147,7 +141,7 @@ auto list<T>::end() noexcept -> typename list::iterator
  
 //  
 template <class T>
-auto list<T>::end() const noexcept -> typename list::iterator
+auto list<T>::end() const noexcept(true) -> typename list::iterator
 {
     return iterator{m_head};
 }
@@ -155,7 +149,7 @@ auto list<T>::end() const noexcept -> typename list::iterator
  
 //  
 template <class T>
-auto list<T>::rbegin() noexcept -> typename list::reverse_iterator
+auto list<T>::rbegin() noexcept(true) -> typename list::reverse_iterator
 {
     return reverse_iterator{m_head->m_prev};
 }
@@ -163,7 +157,7 @@ auto list<T>::rbegin() noexcept -> typename list::reverse_iterator
  
 //  
 template <class T>
-auto list<T>::rbegin() const noexcept -> typename list::reverse_iterator
+auto list<T>::rbegin() const noexcept(true) -> typename list::reverse_iterator
 {
     return reverse_iterator{m_head->m_prev};
 }
@@ -171,7 +165,7 @@ auto list<T>::rbegin() const noexcept -> typename list::reverse_iterator
   
 //  
 template <class T>
-auto list<T>::rend() noexcept -> typename list::reverse_iterator
+auto list<T>::rend() noexcept(true) -> typename list::reverse_iterator
 {
     return reverse_iterator{m_head};
 }
@@ -179,7 +173,7 @@ auto list<T>::rend() noexcept -> typename list::reverse_iterator
  
 //  
 template <class T>
-auto list<T>::rend() const noexcept -> typename list::reverse_iterator
+auto list<T>::rend() const noexcept(true) -> typename list::reverse_iterator
 {
     return reverse_iterator{m_head};
 }
@@ -187,7 +181,7 @@ auto list<T>::rend() const noexcept -> typename list::reverse_iterator
  
 //  
 template <class T>
-list<T>::~list() noexcept
+list<T>::~list() noexcept(std::is_notrow_destructible<T>::value)
 {
     while (not empty()) pop_front();
 
