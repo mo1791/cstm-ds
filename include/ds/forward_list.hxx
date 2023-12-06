@@ -50,46 +50,49 @@ public: /** TYPE ALIAS **/
 
 
 public: /** CONSTRUCTORS **/
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
+
     /** DEFAULT CTOR **/
-    node() noexcept requires(std::default_initializable<T>)
+    node() 
+            noexcept(std::is_nothrow_default_constructible<T>::value)
+            requires(std::is_default_constructible<T>::value)
         : m_data{T{}}
         , m_next{nullptr}
     {}
-//  --------------------------------------------------------------------------
+
     /** PARAM CTOR **/
-    explicit node(T const &p_data, node* p_next = nullptr) noexcept
-    requires(std::copy_constructible<T>)
+    explicit node(T const &p_data, node* p_next = nullptr)
+            noexcept(std::is_nothrow_copy_constructible<T>::value)
+            requires(std::is_copy_constructible<T>::value)
         : m_data{p_data}
         , m_next{p_next}
     {}
-//  --------------------------------------------------------------------------
+
     /** PARAM CTOR (rvalue ref) **/
-    explicit node(T &&p_data, node* p_next = nullptr) noexcept
-    requires(std::move_constructible<T>)
+    explicit node(T &&p_data, node* p_next = nullptr)
+            noexcept(std::is_nothrow_move_constructible<T>::value)
+            requires(std::is_move_constructible<T>::value)
         : m_data{std::move(p_data)}
         , m_next{p_next}
     {}
-//  --------------------------------------------------------------------------
+
     /** **/
     template <class... ARGS>
-    node(std::in_place_t, ARGS &&...p_args) noexcept
-    requires(std::constructible_from<T, ARGS...>)
+    node(std::in_place_t, ARGS &&...p_args)
+            noexcept(std::is_nothrow_constructible<T, ARGS...>::value)
+            requires(std::is_constructible<T, ARGS...>::value)
         : m_data{T{std::forward<ARGS>(p_args)...}}
         , m_next{nullptr}
     {}
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
+
 
 public: /** GETTERS **/
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    auto data()       noexcept -> value_type { return m_data; }
-//  --------------------------------------------------------------------------
-    auto data() const noexcept -> value_type { return m_data; }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
+    auto data()       noexcept(true) -> value_type { return m_data; }
+    auto data() const noexcept(true) -> value_type { return m_data; }
+
+
 
 private:
     value_type m_data;
@@ -121,94 +124,73 @@ public: /** TYPE ALIAS **/
 
 
 public: /** CONSTRUCTORS **/
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    /** DEFAULT CTOR **/
-    Iterator()                  noexcept = default;
-//  --------------------------------------------------------------------------
-    /** DEFAULT COPY CTOR **/
-    Iterator(Iterator const& )  noexcept = default;
-//  --------------------------------------------------------------------------
-    /** DEFAULT MOVE CTOR **/
-    Iterator(Iterator&&)        noexcept = default;
-//  --------------------------------------------------------------------------
-    /** PARAM CTOR **/
-    Iterator(node_type* p_node) noexcept : m_node(p_node) {}
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
+    /** DEFAULT CTOR **/
+    Iterator() noexcept(true) = default;
+
+    /** DEFAULT COPY CTOR **/
+    Iterator(Iterator const& ) noexcept(true) = default;
+
+    /** DEFAULT MOVE CTOR **/
+    Iterator(Iterator&&) noexcept(true) = default;
+
+    /** PARAM CTOR **/
+    Iterator(node_type* p_node) noexcept(true) : m_node(p_node) {}
+
+
     /** DEFAULT COPY ASSIGN **/
-    Iterator& operator=(Iterator const&) noexcept = default;
-//  --------------------------------------------------------------------------
+    Iterator& operator=(Iterator const&) noexcept(true) = default;
+
     /** DEFAULT MOVE ASSIGN **/
-    Iterator& operator=(Iterator&&)      noexcept = default;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    Iterator& operator=(Iterator&&) noexcept(true) = default;
 
 
 public:
-//  --------------------------------------------------------------------------
     /** DEREFERENCE OP **/
-//  --------------------------------------------------------------------------
-    auto operator*()       noexcept -> reference { return m_node->m_data; }
-//  --------------------------------------------------------------------------
-    auto operator*() const noexcept -> reference { return m_node->m_data; }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    auto operator*()       noexcept(true) -> reference { return m_node->m_data; }
+    auto operator*() const noexcept(true) -> reference { return m_node->m_data; }
 
 
-//  --------------------------------------------------------------------------
-    /** ARROW OP (only if T is class type ) **/
-//  --------------------------------------------------------------------------
-    auto operator->()       noexcept -> pointer requires( is_class<T> )
-    {
-        return std::addressof( m_node->m_data );
-    }
-//  --------------------------------------------------------------------------
-    auto operator->() const noexcept -> const_pointer requires( is_class<T> )
-    {
-        return std::addressof( m_node->m_data );
-    }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    /** ARROW OP **/
+    auto operator->()       noexcept(true) ->       pointer { return std::addressof( m_node->m_data ); }
+    auto operator->() const noexcept(true) -> const_pointer { return std::addressof( m_node->m_data ); }
 
 
-//  --------------------------------------------------------------------------
+
+
+
     /** (POST & PRE ) INCREMENT OP **/
-//  --------------------------------------------------------------------------
-    auto operator++() noexcept -> Iterator &
+    auto operator++() noexcept(true) -> Iterator &
     {
         m_node = m_node->m_next;
 
         return *this;
     }
-//  --------------------------------------------------------------------------
-    auto operator++(int) noexcept -> Iterator
+
+    auto operator++(int) noexcept(true) -> Iterator
     {
         auto v_tmp = *this;
         ++(*this);
 
         return (v_tmp);
     }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
 
 
-//  --------------------------------------------------------------------------
+
+
+
     /** COMPAR OP **/
-//  --------------------------------------------------------------------------
     [[nodiscard]] friend auto operator==(Iterator const &p_lhs,
-                                         Iterator const &p_rhs) noexcept
+                                         Iterator const &p_rhs) noexcept(true)
         -> bool
     {
         return (p_lhs.m_node == p_rhs.m_node);
     }
-//  --------------------------------------------------------------------------
+
     /* As of C++20, operator!= is auto generated as !(operator==) */
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
+
 
 protected:
     node_type* m_node;
@@ -225,7 +207,7 @@ template <class T> struct Sentinel
 
 public:
     [[nodiscard]] friend auto operator==(Iterator<T> const& lhs,
-                                         Sentinel<T> const&) noexcept
+                                         Sentinel<T> const&) noexcept(true)
         -> bool
     {
         return ( lhs.m_node == nullptr );
@@ -261,164 +243,139 @@ public:/** TYPE ALIAS **/
    
 
 public: /** CONSTRUCTORS **/
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
+
     /** DEFAULT CTOR **/
-    forward_list() noexcept;
-//  --------------------------------------------------------------------------
+    forward_list() noexcept(true);
+
     /** COPY CTOR **/
-    forward_list(forward_list const&) noexcept;
-//  --------------------------------------------------------------------------
+    forward_list(forward_list const&) noexcept(std::is_nothrow_copy_constructible<T>::value);
+
     /** MOVE CTOR **/
-    forward_list(forward_list&&) noexcept;
-//  --------------------------------------------------------------------------
+    forward_list(forward_list&&) noexcept(true);
+
     /** 
     * INITIALIZER_LIST CTOR 
     * (Construct with the contents of the initializer forward_list)
     * **/
-    forward_list(std::initializer_list<T>) noexcept;
-//  --------------------------------------------------------------------------
+    forward_list(std::initializer_list<T>) noexcept(std::is_nothrow_copy_constructible<T>::value);
+
     /**
     * RANGE CTOR
     * (Construct with the contents of the range)
     * **/
     template <std::ranges::range R>
-    forward_list(R&&) noexcept
+    forward_list(R&&) noexcept(std::is_nothrow_constructible<T, std::ranges::range_value_t<R>>::value)
         requires(non_self<R, forward_list> && 
-                 std::convertible_to<std::ranges::range_value_t<R>, T>);
-//  --------------------------------------------------------------------------
+                 std::is_constructible<T, std::ranges::range_value_t<R>>::value);
+
     /**
     * RANGE CTOR
     * (Construct with the contents of the range [ begin, end ])
     * **/
     template <std::input_iterator I, std::sentinel_for<I> S>
-    forward_list(I, S) noexcept 
-        requires(std::convertible_to<std::iter_value_t<I>, T>);
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    forward_list(I, S) noexcept(std::is_nothrow_constructible<T, std::iter_value_t<I>>::value)
+        requires(std::is_constructible<T, std::iter_value_t<I>>::value);
 
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
     /**
     * ASSIGNMENT OP
     * ( copy-swap idiom )
     * **/
-    auto operator=(forward_list) noexcept -> forward_list &;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    auto operator=(forward_list)
+        noexcept(std::is_nothrow_copy_constructible<T>::value) -> forward_list &;
+
 
 
 public:
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
+
     template <class U>
-    void push_front(U&&) noexcept requires(std::convertible_to<U, T>);
-//  --------------------------------------------------------------------------
+    void push_front(U&&) 
+        noexcept(std::is_nothrow_constructible<T, U>::value)
+        requires(std::is_constructible<T, U>);
+
     template <class U>
-    void push_before(U&&, std::integral auto) noexcept
-        requires(std::convertible_to<U, T>);
-//  --------------------------------------------------------------------------
+    void push_before(U&&, std::integral auto)
+        noexcept(std::is_nothrow_constructible<T, U>::value)
+        requires(std::is_constructible<T, U>);
+
     template <class U>
-    void push_after(U&&, std::integral auto) noexcept 
-        requires(std::convertible_to<U, T>);
-//  --------------------------------------------------------------------------
+    void push_after(U&&, std::integral auto) 
+        noexcept(std::is_nothrow_constructible<T, U>::value)
+        requires(std::is_constructible<T, U>);
+
     template <class U>
-    void push_at(U&&, std::integral auto) noexcept
-        requires(std::convertible_to<U,T>);
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    void push_at(U&&, std::integral auto)
+        noexcept(std::is_nothrow_constructible<T, U>::value)
+        requires(std::is_constructible<T, U>);
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
+
+
+
     template <class... ARGS>
-    void emplace_front(ARGS&& ...) noexcept;
-//  --------------------------------------------------------------------------
+    void emplace_front(ARGS&& ...)
+        noexcept(std::is_nothrow_constructible<T, ARGS...>::value);
+
     template <class... ARGS>
-    void emplace_before(std::integral auto, ARGS&& ...) noexcept;
-//  --------------------------------------------------------------------------
+    void emplace_before(std::integral auto, ARGS&& ...)
+        noexcept(std::is_nothrow_constructible<T, ARGS...>::value);
+
     template <class... ARGS>
-    void emplace_after(std::integral auto, ARGS&& ...) noexcept;
-//  --------------------------------------------------------------------------
+    void emplace_after(std::integral auto, ARGS&& ...)
+        noexcept(std::is_nothrow_constructible<T, ARGS...>::value);
+
     template <class... ARGS>
-    void emplace_at(std::integral auto, ARGS&& ...) noexcept;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    void emplace_at(std::integral auto, ARGS&& ...)
+        noexcept(std::is_nothrow_constructible<T, ARGS...>::value);
+
+
 
 public:
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    void pop_front() noexcept;
-//  --------------------------------------------------------------------------
-    void pop_at(std::integral auto) noexcept;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    void pop_front() noexcept(std::is_nothrow_destructible<T>::value);
+    void pop_at(std::integral auto) noexcept(std::is_nothrow_destructible<T>::value);
+
+
 
 public:
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    [[nodiscard]] auto front() const noexcept -> std::optional<value_type>;
-//  --------------------------------------------------------------------------
-    [[nodiscard]] auto front()       noexcept -> std::optional<value_type>;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    [[nodiscard]] auto front() const noexcept(true) -> std::optional<value_type>;
+    [[nodiscard]] auto front()       noexcept(true) -> std::optional<value_type>;
+
+
 
 public:
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    [[nodiscard]] auto empty() const noexcept -> bool;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    [[nodiscard]] auto empty() const noexcept(true) -> bool;
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    [[nodiscard]] auto size() const noexcept -> size_type;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    [[nodiscard]] auto size() const noexcept(true) -> size_type;
+
+
 
 public:
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    auto begin() const noexcept -> iterator;
-//  --------------------------------------------------------------------------
-    auto begin()       noexcept -> iterator;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    auto begin() const noexcept(true) -> iterator;
+    auto begin()       noexcept(true) -> iterator;
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    auto end() const noexcept -> sentinel;
-//  --------------------------------------------------------------------------
-    auto end()       noexcept -> sentinel;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    
+    auto end() const noexcept(true) -> sentinel;
+    auto end()       noexcept(true) -> sentinel;
+
 
 public:
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    friend void swap(forward_list& p_lhs, forward_list& p_rhs) noexcept
+    friend void swap(forward_list& p_lhs, forward_list& p_rhs) noexcept(true)
     {
         using std::swap;
 
         swap(p_lhs.m_head, p_rhs.m_head);
         swap(p_lhs.m_size, p_rhs.m_size);
     }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+
 
 public:
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    ~forward_list() noexcept;
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    ~forward_list() noexcept(std::is_nothrow_destructible<T>::value);
 
 
 private:
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    auto reverse(node_type* p_head) noexcept -> node_type*
+    auto reverse(node_type* p_head) noexcept(true) -> node_type*
     {
         node_type* p_prev = nullptr;
         node_type* p_curr = p_head;
@@ -433,12 +390,9 @@ private:
         }
         return p_prev;
     }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    auto find_at(std::integral auto p_pos) noexcept -> node_type*
+
+    auto find_at(std::integral auto p_pos) noexcept(true) -> node_type*
     {
         if ( p_pos < 0ul || p_pos >= m_size )
         {
@@ -456,8 +410,6 @@ private:
 
         return v_curr;
     }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
 
 private:
     node_type* m_head;
@@ -472,8 +424,9 @@ private:
 
 template <class T>
 template <std::input_iterator I, std::sentinel_for<I> S>
-forward_list<T>::forward_list(I p_first, S p_last) noexcept
-requires(std::convertible_to<std::iter_value_t<I>, T>)
+forward_list<T>::forward_list(I p_first, S p_last)
+        noexcept(std::is_nothrow_constructible<T, std::iter_value_t<I>>::value)
+        requires(std::is_constructible<T, std::iter_value_t<I>>::value)
     : forward_list{}
 {
     using std::placeholders::_1;
@@ -487,17 +440,20 @@ requires(std::convertible_to<std::iter_value_t<I>, T>)
 
 template <class T>
 template <std::ranges::range R>
-forward_list<T>::forward_list(R&& p_list) noexcept
-requires(non_self<R, forward_list> &&
-         std::convertible_to<std::ranges::range_value_t<R>, T>)
+forward_list<T>::forward_list(R&& p_list)
+        noexcept(std::is_nothrow_constructible<T, std::ranges::range_value_t<R>>::value)
+        requires(non_self<R, forward_list> &&
+         std::is_constructible<T, std::ranges::range_value_t<R>>::value)
     : forward_list(std::ranges::rbegin(p_list), std::ranges::rend(p_list))
-{}
+{
+}
 
 
 template <class T>
 template <class U>
-void forward_list<T>::push_front(U&& p_data) noexcept
-    requires(std::convertible_to<U, T>)
+void forward_list<T>::push_front(U&& p_data)
+    noexcept(std::is_nothrow_constructible<T, U>::value)
+    requires(std::is_constructible<T, U>)
 {
 
     if ( auto v_node = new(std::nothrow) node_type(std::forward<U>(p_data), m_head) )
@@ -510,8 +466,9 @@ void forward_list<T>::push_front(U&& p_data) noexcept
 
 template <class T>
 template <class U>
-void forward_list<T>::push_before(U&& p_data, std::integral auto p_pos) noexcept
-    requires(std::convertible_to<U, T>)
+void forward_list<T>::push_before(U&& p_data, std::integral auto p_pos)
+    noexcept(std::is_nothrow_constructible<T, U>::value)
+    requires(std::is_constructible<T, U>)
 {
     
     node_type* v_targ = find_at(p_pos - 1ul);
@@ -529,8 +486,9 @@ void forward_list<T>::push_before(U&& p_data, std::integral auto p_pos) noexcept
 
 template <class T>
 template <class U>
-void forward_list<T>::push_after(U&& p_data, std::integral auto p_pos) noexcept
-    requires(std::convertible_to<U, T>)
+void forward_list<T>::push_after(U&& p_data, std::integral auto p_pos)
+    noexcept(std::is_nothrow_constructible<T, U>::value)
+    requires(std::is_constructible<T, U>)
 {
     node_type* v_targ = find_at(p_pos);
 
@@ -546,8 +504,9 @@ void forward_list<T>::push_after(U&& p_data, std::integral auto p_pos) noexcept
 
 template <class T>
 template <class U>
-void forward_list<T>::push_at(U&& p_data, std::integral auto p_pos) noexcept
-    requires(std::convertible_to<U, T>)
+void forward_list<T>::push_at(U&& p_data, std::integral auto p_pos)
+    noexcept(std::is_nothrow_constructible<T, U>::value)
+    requires(std::is_constructible<T, U>)
 {
     node_type* v_targ = find_at(p_pos);
 
@@ -559,7 +518,8 @@ void forward_list<T>::push_at(U&& p_data, std::integral auto p_pos) noexcept
 
 template <class T>
 template <class... ARGS>
-void forward_list<T>::emplace_front(ARGS&& ...p_args) noexcept
+void forward_list<T>::emplace_front(ARGS&& ...p_args)
+    noexcept(std::is_nothrow_constructible<T, ARGS...>::value)
 {
     if ( auto v_node = new(std::nothrow) node_type(std::in_place, std::forward<ARGS>(p_args)...) )
     {
@@ -574,7 +534,8 @@ void forward_list<T>::emplace_front(ARGS&& ...p_args) noexcept
 
 template <class T>
 template <class... ARGS>
-void forward_list<T>::emplace_before(std::integral auto p_pos, ARGS&& ...p_args) noexcept
+void forward_list<T>::emplace_before(std::integral auto p_pos, ARGS&& ...p_args)
+    noexcept(std::is_nothrow_constructible<T, ARGS...>::value)
 {
     node_type* v_targ = find_at(p_pos - 1ul);
 
@@ -592,7 +553,8 @@ void forward_list<T>::emplace_before(std::integral auto p_pos, ARGS&& ...p_args)
 
 template <class T>
 template <class... ARGS>
-void forward_list<T>::emplace_after(std::integral auto p_pos, ARGS&& ...p_args) noexcept
+void forward_list<T>::emplace_after(std::integral auto p_pos, ARGS&& ...p_args)
+    noexcept(std::is_nothrow_constructible<T, ARGS...>::value)
 {
     node_type* v_targ = find_at(p_pos);
 
@@ -609,7 +571,8 @@ void forward_list<T>::emplace_after(std::integral auto p_pos, ARGS&& ...p_args) 
 
 template <class T>
 template <class... ARGS>
-void forward_list<T>::emplace_at(std::integral auto p_pos, ARGS&& ...p_args) noexcept
+void forward_list<T>::emplace_at(std::integral auto p_pos, ARGS&& ...p_args)
+    noexcept(std::is_nothrow_constructible<T, ARGS...>::value)
 {
     node_type* v_targ = find_at(p_pos);
 
@@ -625,7 +588,8 @@ void forward_list<T>::emplace_at(std::integral auto p_pos, ARGS&& ...p_args) noe
 
 
 template <class T>
-void forward_list<T>::pop_at(std::integral auto p_pos) noexcept
+void forward_list<T>::pop_at(std::integral auto p_pos)
+    noexcept(std::is_nothrow_destructible<T>::value)
 {
     assert( not empty() );
 
@@ -646,25 +610,22 @@ void forward_list<T>::pop_at(std::integral auto p_pos) noexcept
 
 
 
-    /** USER DEFINED TYPE DEDUCTION **/
-//  -----------------------------------------------------------------------------------
-    template <std::ranges::range R>
-    forward_list( R&& ) -> forward_list<std::ranges::range_value_t<R>>;
-//  -----------------------------------------------------------------------------------
-    template <std::input_iterator I, std::sentinel_for<I> S>
-    forward_list( I, S ) -> forward_list<std::iter_value_t<I>>;
-//  -----------------------------------------------------------------------------------
+/** USER DEFINED TYPE DEDUCTION **/
+template <std::ranges::range R>
+forward_list( R&& ) -> forward_list<std::ranges::range_value_t<R>>;
+
+template <std::input_iterator I, std::sentinel_for<I> S>
+forward_list( I, S ) -> forward_list<std::iter_value_t<I>>;
 
 
 
-    /**
-    * This specialization of std::ranges::enable_borrowed_range 
-    * makes list satisfy borrowed_range 
-    * **/
-//  -----------------------------------------------------------------------------------
-    template <class T>
-    inline constexpr bool std::ranges::enable_borrowed_range<forward_list<T>> = true;
-//  -----------------------------------------------------------------------------------
+/**
+* This specialization of std::ranges::enable_borrowed_range 
+* makes list satisfy borrowed_range 
+* **/
+template <class T>
+inline constexpr bool std::ranges::enable_borrowed_range<forward_list<T>> = true;
+
 
 
 extern template class forward_list<int>;

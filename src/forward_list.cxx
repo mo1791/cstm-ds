@@ -12,7 +12,7 @@
 //  
 //  
 template <class T>
-forward_list<T>::forward_list() noexcept
+forward_list<T>::forward_list() noexcept(true)
     : m_head{ nullptr }
     , m_size{ 0ul }
 {}
@@ -20,14 +20,16 @@ forward_list<T>::forward_list() noexcept
 
 //  
 template <class T>
-forward_list<T>::forward_list(std::initializer_list<T> p_list) noexcept
+forward_list<T>::forward_list(std::initializer_list<T> p_list)
+        noexcept(std::is_nothrow_copy_constructible<T>::value)
     : forward_list(std::ranges::rbegin(p_list), std::ranges::rend(p_list))
 {}
 
 
 //  
 template <class T>
-forward_list<T>::forward_list(forward_list const& p_outer) noexcept
+forward_list<T>::forward_list(forward_list const& p_outer)
+        noexcept(std::is_nothrow_copy_constructible<T>::value)
     : forward_list( std::ranges::begin(p_outer), std::ranges::end(p_outer) )
 {
     m_head = reverse(m_head);
@@ -36,7 +38,7 @@ forward_list<T>::forward_list(forward_list const& p_outer) noexcept
 
 //  
 template <class T>
-forward_list<T>::forward_list(forward_list&& p_outer) noexcept
+forward_list<T>::forward_list(forward_list&& p_outer) noexcept(true)
     : forward_list{}
 {
     swap(*this, p_outer);
@@ -45,7 +47,8 @@ forward_list<T>::forward_list(forward_list&& p_outer) noexcept
 
 //  
 template <class T>
-auto forward_list<T>::operator=(forward_list p_list) noexcept -> forward_list &
+auto forward_list<T>::operator=(forward_list p_list)
+    noexcept(std::is_nothrow_copy_constructible<T>::value) -> forward_list &
 {
     swap(*this, p_list);
 
@@ -55,7 +58,7 @@ auto forward_list<T>::operator=(forward_list p_list) noexcept -> forward_list &
 
 //  
 template <class T>
-void forward_list<T>::pop_front() noexcept
+void forward_list<T>::pop_front() noexcept(std::is_nothrow_destructible<T>::value)
 {
     assert(not empty());
 
@@ -70,7 +73,7 @@ void forward_list<T>::pop_front() noexcept
 
 //  
 template <class T>
-[[nodiscard]] auto forward_list<T>::empty() const noexcept -> bool
+[[nodiscard]] auto forward_list<T>::empty() const noexcept(true) -> bool
 {
     return ( m_head == nullptr );
 }
@@ -78,7 +81,7 @@ template <class T>
 
 //  
 template <class T>
-[[nodiscard]] auto forward_list<T>::size() const noexcept
+[[nodiscard]] auto forward_list<T>::size() const noexcept(true)
     -> typename forward_list::size_type
 {
     return m_size;
@@ -87,7 +90,7 @@ template <class T>
 
 //  
 template <class T>
-[[nodiscard]] auto forward_list<T>::front() const noexcept
+[[nodiscard]] auto forward_list<T>::front() const noexcept(true)
     -> std::optional<typename forward_list::value_type>
 {
     return not empty()  ? std::optional{ m_head->data() }
@@ -97,7 +100,7 @@ template <class T>
 
 //  
 template <class T>
-[[nodiscard]] auto forward_list<T>::front() noexcept
+[[nodiscard]] auto forward_list<T>::front() noexcept(true)
     -> std::optional<typename forward_list::value_type>
 {
     return not empty()  ? std::optional{ m_head->data() }
@@ -107,7 +110,7 @@ template <class T>
 
 //  
 template <class T>
-auto forward_list<T>::begin() noexcept -> typename forward_list::iterator
+auto forward_list<T>::begin() noexcept(true) -> typename forward_list::iterator
 {
     return iterator{m_head};
 }
@@ -115,7 +118,7 @@ auto forward_list<T>::begin() noexcept -> typename forward_list::iterator
 
 //  
 template <class T>
-auto forward_list<T>::begin() const noexcept -> typename forward_list::iterator
+auto forward_list<T>::begin() const noexcept(true) -> typename forward_list::iterator
 {
     return iterator{m_head};
 }
@@ -123,7 +126,7 @@ auto forward_list<T>::begin() const noexcept -> typename forward_list::iterator
 
 //  
 template <class T>
-auto forward_list<T>::end() noexcept -> typename forward_list::sentinel
+auto forward_list<T>::end() noexcept(true) -> typename forward_list::sentinel
 {
     return sentinel{};
 }
@@ -131,7 +134,7 @@ auto forward_list<T>::end() noexcept -> typename forward_list::sentinel
 
 //  
 template <class T>
-auto forward_list<T>::end() const noexcept -> typename forward_list::sentinel
+auto forward_list<T>::end() const noexcept(true) -> typename forward_list::sentinel
 {
     return sentinel{};
 }
@@ -139,7 +142,7 @@ auto forward_list<T>::end() const noexcept -> typename forward_list::sentinel
 
 //  
 template <class T>
-forward_list<T>::~forward_list() noexcept
+forward_list<T>::~forward_list() noexcept(std::is_nothrow_destructible<T>::value)
 {
     while (not empty()) pop_front();
 
