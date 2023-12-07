@@ -32,54 +32,46 @@ public: /** TYPE ALIAS **/
 
 
 public: /** CONSTRUCTORS **/
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
     /** DEFAULT CTOR **/
-    node() noexcept requires(std::default_initializable<T>)
+    node() noexcept(std::is_nothrow_default_constructible<T>::value)
+            requires(std::is_default_constructible<T>::value)
         : m_data{T{}}
         , m_next{nullptr}
     {}
-//  -------------------------------------------------------------------------
+
     /** PARAM CTOR **/
-    explicit node(T const &p_value, node* p_next) noexcept
-        requires(std::copy_constructible<T>)
+    explicit node(T const &p_value, node* p_next)
+            noexcept(std::is_nothrow_copy_constructible<T>::value)
+        requires(std::is_copy_constructible<T>::value)
         : m_data{p_value}
         , m_next{p_next}
     {}
-//  -------------------------------------------------------------------------
+
     /** PARAM CTOR **/
-    explicit node(T &&p_value, node* p_next) noexcept
-        requires(std::move_constructible<T>)
+    explicit node(T &&p_value, node* p_next)
+            noexcept(std::is_nothrow_move_constructible<T>::value)
+        requires(std::is_move_constructible<T>::value)
         : m_data{std::move(p_value)}
         , m_next{p_next}
     {}
-//  -------------------------------------------------------------------------
+
     /** **/
     template <class... ARGS>
-    node(std::in_place_t,  &&...p_args) noexcept
-        requires(std::constructible_from<T, ARGS...>)
+    node(std::in_place_t,  &&...p_args)
+            noexcept(std::ic_nothrow_constructible<T, ARGS...>::value)
+            requires(std::is_constructible<T, ARGS...>::value)
         : m_data{std::forward<ARGS>(p_args)...}
         , m_next{nullptr}
     {}
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+
+
 
 public: /** GETTERS **/
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    auto data() const noexcept -> decltype(auto) { return m_data; }
-//  --------------------------------------------------------------------------
-    auto data()       noexcept -> decltype(auto) { return m_data; }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    auto data() const noexcept(true) -> decltype(auto) { return m_data; }
+    auto data()       noexcept(true) -> decltype(auto) { return m_data; }
 
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
-    auto next() const noexcept -> decltype(auto) { return m_next; }
-//  --------------------------------------------------------------------------
-    auto next()       noexcept -> decltype(auto) { return m_next; }
-//  --------------------------------------------------------------------------
-//  --------------------------------------------------------------------------
+    auto next() const noexcept(true) -> decltype(auto) { return m_next; }
+    auto next()       noexcept(true) -> decltype(auto) { return m_next; }
 
 private:
     value_type m_data;
@@ -87,9 +79,8 @@ private:
 
 };
 
-//  //
-
 //* END NODE *//
+
 
 template <class T> class stack final
 {
@@ -107,126 +98,92 @@ public: /** TYPE ALIAS **/
 
 
 public: /** CONSTRUCTORS **/
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+
+
     /** DEFAULT CTOR **/
-    stack() noexcept;
-//  -------------------------------------------------------------------------
+    stack() noexcept(true);
+
     /** COPY CTOR **/
-    stack(stack const &) noexcept;
-//  -------------------------------------------------------------------------
+    stack(stack const &) noexcept(std::is_nothrow_constructible<T>::value);
+
     /** MOVE CTOR **/
-    stack(stack &&) noexcept;
-//  -------------------------------------------------------------------------
+    stack(stack &&) noexcept(true);
+
     /**
     * RANGE CTOR
     * (Construct with the contents of the range [ begin, end ])
     * **/
     template <std::input_iterator I, std::sentinel_for<I> S>
-    stack(I, S) noexcept
-        requires(std::convertible_to<std::iter_value_t<I>, T>);
-//  -------------------------------------------------------------------------
+    stack(I, S) noexcept(std::is_nothrow_constructible<T, std::iter_value_t<T>>::value)
+        requires(std::is_constructible<T, std::iter_value_t<I>>::value);
+
     /**
     * RANGE CTOR
     * (Construct with the contents of the range)
     * **/
     template <std::ranges::range R>
-    stack(R &&) noexcept
-        requires(std::convertible_to<std::ranges::range_value_t<R>, T>);
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+    stack(R &&) noexcept(std::is_nothrow_constructible<T, std::ranges::range_value_t<T>>::value)
+        requires(std::is_constructible<T, std::ranges::range_value_t<R>>::value);
 
-
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------    
+    
     /**
     * ASSIGNMENT OP
     * ( copy-swap idiom )
     * **/
-    auto operator=(stack) noexcept -> stack &;
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+    auto operator=(stack) noexcept(std::is_nothrow_copy_constructible<T>::value) -> stack &;
 
 
 public:
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
     template <class U>
-    void push_front(U &&) noexcept requires(std::convertible_to<U, T>);
-//  -------------------------------------------------------------------------
+    void push_front(U &&) noexcept(std::is_nothrow_constructible<T, U>::value)
+        requires(std::is_constructible<T, U>::value);
+
     template <class U>
-    void push(U &&) noexcept requires(std::convertible_to<U, T>);
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+    void push(U &&) noexcept(std::is_nothrow_constructible<T, U>::value)
+        requires(std::is_constructible<T, U>::value);
 
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+
     template <class... ARGS>
-    void emplace_front(ARGS &&...) noexcept;
-//  -------------------------------------------------------------------------
+    void emplace_front(ARGS &&...) noexcept(std::is_nothrow_constructible<T, ARGS...>::value);
+
     template <class... ARGS>
-    void emplace(ARGS &&...) noexcept;
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+    void emplace(ARGS &&...) noexcept(std::is_nothrow_constructible<T, ARGS...>::value);
 
-
-public:
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    void pop_front() noexcept;
-//  -------------------------------------------------------------------------
-    void pop() noexcept;
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
 
 
 public:
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    [[nodiscard]] auto peep() const noexcept -> std::optional<value_type>;
-//  -------------------------------------------------------------------------
-    [[nodiscard]] auto peep()       noexcept -> std::optional<value_type>;
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+    void pop_front() noexcept(std::is_nothrow_destructible<T>::value);
+    void pop() noexcept(std::is_nothrow_destructible<T>::value);
 
 
 public:
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    [[nodiscard]] auto empty() const noexcept -> bool;
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    [[nodiscard]] auto size() const noexcept -> size_type;
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-
-public:
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    ~stack() noexcept;
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+    [[nodiscard]] auto peep() const noexcept(true) -> std::optional<value_type>;
+    [[nodiscard]] auto peep()       noexcept(true) -> std::optional<value_type>;
 
 
 public:
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    friend void swap(stack &p_lhs, stack &p_rhs) noexcept
+    [[nodiscard]] auto empty() const noexcept(true) -> bool;
+
+    [[nodiscard]] auto size() const noexcept(true) -> size_type;
+
+
+public:
+    ~stack() noexcept(std::is_nothrow_destructible<T>::value);
+
+
+
+
+public:
+
+
+    friend void swap(stack &p_lhs, stack &p_rhs) noexcept(true)
     {
-        using std::swap;
-
-        swap(p_lhs.m_head, p_rhs.m_head);
-        swap(p_lhs.m_size, p_rhs.m_size);
+        std::swap(p_lhs.m_head, p_rhs.m_head);
+        std::swap(p_lhs.m_size, p_rhs.m_size);
     }
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
 
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
-    void debug() const noexcept
+
+    void debug() const noexcept(true)
     {
         node_type* v_node = m_head;
 
@@ -238,8 +195,8 @@ public:
 
         std::cout << std::endl;
     }
-//  -------------------------------------------------------------------------
-//  -------------------------------------------------------------------------
+
+
 private:
     node_type* m_head;
     size_type  m_size;
@@ -254,8 +211,9 @@ private:
 
 template <class T>
 template <std::input_iterator I, std::sentinel_for<I> S>
-stack<T>::stack(I p_begin, S p_end) noexcept
-requires(std::convertible_to<std::iter_value_t<I>, T>)
+stack<T>::stack(I p_begin, S p_end)
+        noexcept(std::is_nothrow_constructible<T, std::iter_value_t<T>>::value)
+        requires(std::is_constructible<T, std::iter_value_t<I>>::value)
     : stack()
 {
     using std::placeholders::_1;
@@ -268,15 +226,17 @@ requires(std::convertible_to<std::iter_value_t<I>, T>)
 
 template <class T>
 template <std::ranges::range R>
-stack<T>::stack(R &&p_container) noexcept
-requires(std::convertible_to<std::ranges::range_value_t<R>, T>)
+stack<T>::stack(R &&p_container)
+        noexcept(std::is_nothrow_constructible<T, std::ranges::range_value_t<T>>::value)
+        requires(std::is_constructible<T, std::ranges::range_value_t<R>>::value)
     : stack(std::ranges::begin(p_container), std::ranges::end(p_container))
 {}
 
 
 template <class T>
 template <class U>
-void stack<T>::push_front(U &&p_value) noexcept requires(std::convertible_to<U, T>)
+void stack<T>::push_front(U &&p_value) noexcept(std::is_nothrow_constructible<T,U>::value)
+    requires(std::is_constructible<T, U>::value)
 {
     if ( auto v_node = new(std::nothrow) node_type(std::forward<U>(p_value), m_head) )
     {
@@ -289,7 +249,8 @@ void stack<T>::push_front(U &&p_value) noexcept requires(std::convertible_to<U, 
 
 template <class T>
 template <class U>
-void stack<T>::push(U &&p_value) noexcept requires(std::convertible_to<U, T>)
+void stack<T>::push(U &&p_value) noexcept(std::is_nothrow_constructible<T, U>::value)
+    requires(std::is_constructible<T, U>::value)
 {
     push_front(std::forward<U>(p_value));
 }
@@ -297,9 +258,10 @@ void stack<T>::push(U &&p_value) noexcept requires(std::convertible_to<U, T>)
 
 template <class T>
 template <class... ARGS>
-void stack<T>::emplace_front(ARGS &&...p_args) noexcept
+void stack<T>::emplace_front(ARGS &&...p_args)
+    noexcept(std::is_nothrow_constructible<T, ARGS...>::value)
 {
-    if ( auto v_node = new node_type(std::in_place, std::forward<ARGS>(p_args)...) )
+    if ( auto v_node = new(std::nothrow) node_type(std::in_place, std::forward<ARGS>(p_args)...) )
     {
         v_node->m_next = m_head;
         m_head         = v_node;
@@ -311,21 +273,20 @@ void stack<T>::emplace_front(ARGS &&...p_args) noexcept
 
 template <class T>
 template <class... ARGS>
-void stack<T>::emplace(ARGS &&...p_args) noexcept
+void stack<T>::emplace(ARGS &&...p_args)
+    noexcept(std::is_nothrow_constructible<T, ARGS...>::value)
 {
     emplace_front(std::forward<ARGS>(p_args)...);
 }
 
 
 
-    /** USER DEFINED TYPE DEDUCTION **/
-//  -----------------------------------------------------------------------
-    template <std::ranges::range R>
-    stack( R&& ) -> stack<std::ranges::range_value_t<R>>;
-//  -----------------------------------------------------------------------
-    template <std::input_iterator I, std::sentinel_for<I> S>
-    stack( I, S ) -> stack<std::iter_value_t<I>>;
-//  -----------------------------------------------------------------------
+/** USER DEFINED TYPE DEDUCTION **/
+template <std::ranges::range R>
+stack( R&& ) -> stack<std::ranges::range_value_t<R>>;
+
+template <std::input_iterator I, std::sentinel_for<I> S>
+stack( I, S ) -> stack<std::iter_value_t<I>>;
 
 
 extern template class stack<int>;

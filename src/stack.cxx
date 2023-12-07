@@ -1,20 +1,17 @@
-//  -------------------------------
-//  -------------------------------
-        #include <ds/stack.hxx>
-//  -------------------------------
-//  -------------------------------
 
-// star stack
+#include <ds/stack.hxx>
+
 // star stack
 //  
 //  
 template <class T>
-stack<T>::stack() noexcept : m_head(nullptr), m_size(0x0ul) {}
+stack<T>::stack() noexcept(true) : m_head(nullptr), m_size(0x0ul) {}
 
 
 //  
 template <class T>
-stack<T>::stack(stack const &p_outer) noexcept : stack()
+stack<T>::stack(stack const &p_outer)
+    noexcept(std::is_nothrow_copy_constructible<T>::value) : stack()
 {
     node_type* v_curr   = p_outer.m_head;
 
@@ -45,7 +42,7 @@ stack<T>::stack(stack const &p_outer) noexcept : stack()
 
 //  
 template <class T>
-stack<T>::stack(stack &&p_outer) noexcept : stack()
+stack<T>::stack(stack &&p_outer) noexcept(true) : stack()
 {
     swap(*this, p_outer);
 }
@@ -53,7 +50,8 @@ stack<T>::stack(stack &&p_outer) noexcept : stack()
 
 //  
 template <class T>
-stack<T> &stack<T>::operator=(stack p_rhs) noexcept
+stack<T> &stack<T>::operator=(stack p_rhs)
+    noexcept(std::is_nothrow_copy_constructible<T>::value)
 {
     swap(*this, p_rhs);
 
@@ -63,7 +61,7 @@ stack<T> &stack<T>::operator=(stack p_rhs) noexcept
 
 //  
 template <class T>
-void stack<T>::pop_front() noexcept
+void stack<T>::pop_front() noexcept(std::is_nothrow_destructible<T>::value)
 {
     assert(not empty());
 
@@ -79,7 +77,7 @@ void stack<T>::pop_front() noexcept
 
 //  
 template <class T>
-void stack<T>::pop() noexcept
+void stack<T>::pop() noexcept(std::is_nothrow_destructible<T>::value)
 {
     pop_front();
 }
@@ -87,7 +85,7 @@ void stack<T>::pop() noexcept
 
 //  
 template <class T>
-[[nodiscard]] auto stack<T>::empty() const noexcept -> bool
+[[nodiscard]] auto stack<T>::empty() const noexcept(true) -> bool
 {
     return (m_head == nullptr);
 }
@@ -95,7 +93,7 @@ template <class T>
 
 //  
 template <class T>
-[[nodiscard]] auto stack<T>::size() const noexcept 
+[[nodiscard]] auto stack<T>::size() const noexcept(true)
     -> typename stack::size_type
 {
     return m_size;
@@ -106,7 +104,7 @@ template <class T>
 //  
 //  
 template <class T>
-[[nodiscard]] auto stack<T>::peep() const noexcept
+[[nodiscard]] auto stack<T>::peep() const noexcept(true)
     -> std::optional<typename stack::value_type>
 {
     return (not empty() ? std::optional{m_head->data()}
@@ -116,7 +114,7 @@ template <class T>
 
 //  
 template <class T>
-[[nodiscard]] auto stack<T>::peep() noexcept
+[[nodiscard]] auto stack<T>::peep() noexcept(true)
     -> std::optional<typename stack::value_type>
 {
     return (not empty() ? std::optional{m_head->data()}
@@ -126,7 +124,7 @@ template <class T>
 
 //  
 template <class T>
-stack<T>::~stack() noexcept
+stack<T>::~stack() noexcept(std::is_nothrow_destructible<T>::value)
 {
     while (not empty())
     {
