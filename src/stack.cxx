@@ -5,7 +5,7 @@
 //  
 //  
 template <class T>
-stack<T>::stack() noexcept(true) : m_head(nullptr), m_size(0x0ul) {}
+stack<T>::stack() noexcept(true) = default;
 
 
 //  

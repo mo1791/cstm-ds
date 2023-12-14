@@ -36,7 +36,6 @@ public: /** CONSTRUCTORS **/
     node() noexcept(std::is_nothrow_default_constructible<T>::value)
             requires(std::is_default_constructible<T>::value)
         : m_data{T{}}
-        , m_next{nullptr}
     {}
 
     /** PARAM CTOR **/
@@ -75,7 +74,7 @@ public: /** GETTERS **/
 
 private:
     value_type m_data;
-    node*      m_next;
+    node*      m_next {};
 
 };
 
@@ -198,8 +197,8 @@ public:
 
 
 private:
-    node_type* m_head;
-    size_type  m_size;
+    node_type* m_head {};
+    size_type  m_size {};
 };
 
 
