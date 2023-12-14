@@ -30,40 +30,42 @@ public: /** CONSTRUCTORS **/
     /** DEFAULT CTOR **/
     node()  noexcept(std::is_nothrow_default_constructible<T>::value)
             requires(std::is_default_constructible<T>::value)
-        : m_data(T{}), m_left(nullptr), m_right(nullptr), m_parent(nullptr) {}
+        : m_data(T{})
+    {
+    }
     
     /** PARAM CTOR **/
     explicit node(T const& data)
             noexcept( std::is_nothrow_copy_constructible<T>::value)
             requires(std::is_copy_constructible<T>::value)
-        : m_data(data), m_left(nullptr), m_right(nullptr), m_parent(nullptr) {}
+        : m_data(data)
+    {
+    }
     
     /** PARAM CTOR ( rvalue ref ) **/
     explicit node(T&& data)
             noexcept( std::is_nothrow_move_constructible<T>::value)
             requires(std::is_move_constructible<T>::value)
-        : m_data(std::move(data)),
-          m_left(nullptr),
-          m_right(nullptr),
-          m_parent(nullptr) {}
+        : m_data(std::move(data))
+    {
+    }
     
     /** **/
     template <class... ARGS>
     node(std::in_place_t, ARGS&&... p_args)
             noexcept( std::is_nothrow_constructible<T, ARGS...>::value)
             requires(std::is_constructible<T, ARGS...>::value)
-        : m_data(std::forward<ARGS>(p_args)...),
-          m_left(nullptr),
-          m_right(nullptr),
-          m_parent(nullptr) {}
+        : m_data(std::forward<ARGS>(p_args)...)
+    {
+    }
     
     
 
 private:
     value_type m_data;
-    node* m_left;
-    node* m_right;
-    node* m_parent;
+    node* m_left   {};
+    node* m_right  {};
+    node* m_parent {};
 };
 
 /** **/
@@ -255,8 +257,8 @@ private:
     
 
 private:
-    node_type* m_root;
-    size_type m_size;
+    node_type* m_root {};
+    size_type  m_size {};
 };
 
 /** END TREE **/

@@ -14,10 +14,7 @@
 
 //
 template <std::totally_ordered T>
-binary_search_tree<T>::binary_search_tree() noexcept(true)
-    : m_root(nullptr)
-    , m_size(0ul)
-{}
+binary_search_tree<T>::binary_search_tree() noexcept(true) = default;
 
 
 //
