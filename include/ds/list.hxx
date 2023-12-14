@@ -187,7 +187,7 @@ public:
 
 
 protected:
-    node_type* m_node;
+    node_type* m_node {};
 
 };
 
