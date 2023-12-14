@@ -12,10 +12,7 @@
 //  
 //  
 template <class T>
-forward_list<T>::forward_list() noexcept(true)
-    : m_head{ nullptr }
-    , m_size{ 0ul }
-{}
+forward_list<T>::forward_list() noexcept(true)  = default;
 
 
 //  

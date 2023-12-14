@@ -57,7 +57,6 @@ public: /** CONSTRUCTORS **/
             noexcept(std::is_nothrow_default_constructible<T>::value)
             requires(std::is_default_constructible<T>::value)
         : m_data{T{}}
-        , m_next{nullptr}
     {}
 
     /** PARAM CTOR **/
@@ -82,7 +81,6 @@ public: /** CONSTRUCTORS **/
             noexcept(std::is_nothrow_constructible<T, ARGS...>::value)
             requires(std::is_constructible<T, ARGS...>::value)
         : m_data{T{std::forward<ARGS>(p_args)...}}
-        , m_next{nullptr}
     {}
 
 
@@ -96,7 +94,7 @@ public: /** GETTERS **/
 
 private:
     value_type m_data;
-    node*      m_next;
+    node*      m_next {};
 };
 
 //  //
@@ -193,7 +191,7 @@ public:
 
 
 protected:
-    node_type* m_node;
+    node_type* m_node{};
 
 };
 
@@ -412,8 +410,8 @@ private:
     }
 
 private:
-    node_type* m_head;
-    size_type  m_size;
+    node_type* m_head {};
+    size_type  m_size {};
 
 };
 
