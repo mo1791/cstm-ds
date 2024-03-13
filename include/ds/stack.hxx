@@ -282,7 +282,7 @@ void stack<T>::emplace(ARGS &&...p_args)
 
 /** USER DEFINED TYPE DEDUCTION **/
 template <std::ranges::range R>
-stack( R&& ) -> stack<std::ranges::range_value_t<R>>;
+stack( R ) -> stack<std::ranges::range_value_t<R>>;
 
 template <std::input_iterator I, std::sentinel_for<I> S>
 stack( I, S ) -> stack<std::iter_value_t<I>>;

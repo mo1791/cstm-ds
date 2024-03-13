@@ -610,7 +610,7 @@ void forward_list<T>::pop_at(std::integral auto p_pos)
 
 /** USER DEFINED TYPE DEDUCTION **/
 template <std::ranges::range R>
-forward_list( R&& ) -> forward_list<std::ranges::range_value_t<R>>;
+forward_list( R ) -> forward_list<std::ranges::range_value_t<R>>;
 
 template <std::input_iterator I, std::sentinel_for<I> S>
 forward_list( I, S ) -> forward_list<std::iter_value_t<I>>;

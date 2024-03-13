@@ -304,7 +304,7 @@ void queue<T>::emplace(ARGS&&... p_args) noexcept(std::is_nothrow_constructible<
 /** USER DEFINED TYPE DEDUCTION **/
 
 template <std::ranges::range R>
-queue( R&& ) -> queue<std::ranges::range_value_t<R>>;
+queue( R ) -> queue<std::ranges::range_value_t<R>>;
 
 template <std::input_iterator I, std::sentinel_for<I> S>
 queue( I, S ) -> queue<std::iter_value_t<I>>;

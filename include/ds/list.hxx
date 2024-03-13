@@ -679,7 +679,7 @@ void list<T>::emplace_at(std::integral auto p_pos, ARGS&& ...p_args)
 
 
 /** USER DEFINED TYPE DEDUCTION **/
-template <std::ranges::range R>  list( R&& ) -> list<std::ranges::range_value_t<R>>;
+template <std::ranges::range R>  list( R ) -> list<std::ranges::range_value_t<R>>;
 template <std::input_iterator I, std::sentinel_for<I> S> list( I, S ) -> list<std::iter_value_t<I>>;
 
 

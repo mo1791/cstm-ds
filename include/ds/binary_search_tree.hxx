@@ -395,7 +395,7 @@ void binary_search_tree<T>::emplace(Args&&... p_args)
 
 /** USER DEFINED TYPE DEDUCTION **/
 template <std::ranges::range R>
-binary_search_tree(R&&) -> binary_search_tree<std::ranges::range_value_t<R>>;
+binary_search_tree(R) -> binary_search_tree<std::ranges::range_value_t<R>>;
 
 template <std::input_iterator I, std::sentinel_for<I> S>
 binary_search_tree(I, S) -> binary_search_tree<std::iter_value_t<I>>;
