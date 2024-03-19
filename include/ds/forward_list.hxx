@@ -166,16 +166,10 @@ public:
         return *this;
     }
 
-    auto operator++(int) noexcept(true) -> Iterator
+    auto operator++(this Iterator self, int) noexcept(true) -> Iterator
     {
-        auto v_tmp = *this;
-        ++(*this);
-
-        return (v_tmp);
+        return ++self;
     }
-
-
-
 
 
     /** COMPAR OP **/

@@ -216,12 +216,9 @@ public:
         return *this;
     }
 
-    auto operator++(int) noexcept(true) -> Forward
+    auto operator++(this Forward self, int) noexcept(true) -> Forward
     {
-        auto v_tmp = *this;
-        ++(*this);
-
-        return (v_tmp);
+        return ++self;
     }
 
     /** (POST & PRE ) DECREMENT OP **/
@@ -232,12 +229,9 @@ public:
         return *this;
     }
 
-    auto operator--(int) noexcept(true) -> Forward
+    auto operator--(this Forward self, int) noexcept(true) -> Forward
     {
-        auto v_tmp = *this;
-        --(*this);
-
-        return (v_tmp);
+       return --self;
     }
 
 
@@ -268,12 +262,9 @@ public:
         return *this;
     }
 
-    auto operator++(int) noexcept(true) -> Backward
+    auto operator++(this Backward self, int) noexcept(true) -> Backward
     {
-        auto v_tmp = *this;
-        ++(*this);
-
-        return (v_tmp);
+        return ++self;
     }
 
     /** (POST & PRE) DECREMENT OP **/
@@ -283,12 +274,9 @@ public:
         return *this;
     }
 
-    auto operator--(int) noexcept(true) -> Backward
+    auto operator--(this Backward self, int) noexcept(true) -> Backward
     {
-        auto v_tmp = *this;
-        --(*this);
-
-        return (v_tmp);
+        return --self;
     }
 
 
