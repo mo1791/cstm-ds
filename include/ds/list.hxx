@@ -210,28 +210,34 @@ public:
 public:
 
     /** (POST & PRE ) INCREMENT OP **/
-    auto operator++() noexcept(true) -> Forward &
+    auto operator++(this Forward& self) noexcept(true) -> Forward &
     {
-        m_node = m_node->m_next;
-        return *this;
+        self.m_node = self.m_node->m_next;
+        return self;
     }
 
-    auto operator++(this Forward self, int) noexcept(true) -> Forward
+    auto operator++(this Forward& self, int) noexcept(true) -> Forward
     {
-        return ++self;
+        auto copy   = auto{ self };
+        self.m_node = self.m_node->m_next;
+        
+        return copy;
     }
 
     /** (POST & PRE ) DECREMENT OP **/
 
-    auto operator--() noexcept(true) -> Forward &
+    auto operator--(this Forward& self) noexcept(true) -> Forward &
     {
-        m_node = m_node->m_prev;
-        return *this;
+        self.m_node = self.m_node->m_prev;
+        return self;
     }
 
-    auto operator--(this Forward self, int) noexcept(true) -> Forward
+    auto operator--(this Forward& self, int) noexcept(true) -> Forward
     {
-       return --self;
+        auto copy   = auto{ self };
+        self.m_node = self.m_node->m_next;
+        
+        return copy;
     }
 
 
@@ -256,26 +262,32 @@ public:
 public:
 
     /** (POST & PRE) INCREMENT OP **/
-    auto operator++() noexcept(true) -> Backward &
+    auto operator++(this Backward& self) noexcept(true) -> Backward &
     {
-        m_node = m_node->m_prev;
-        return *this;
+        self.m_node = self.m_node->m_prev;
+        return self;
     }
 
-    auto operator++(this Backward self, int) noexcept(true) -> Backward
+    auto operator++(this Backward& self, int) noexcept(true) -> Backward
     {
-        return ++self;
+        auto copy   = auto{ self };
+        self.m_node = self.m_node->m_prev;
+
+        return copy;
     }
 
     /** (POST & PRE) DECREMENT OP **/
-    auto operator--() noexcept(true) -> Backward &
+    auto operator--(this Backward& self) noexcept(true) -> Backward &
     {
-        m_node = m_node->m_next;
+        self.m_node = self.m_node->m_next;
         return *this;
     }
 
-    auto operator--(this Backward self, int) noexcept(true) -> Backward
+    auto operator--(this Backward& self, int) noexcept(true) -> Backward
     {
+        auto copy   = auto{ self };
+        self.m_node = self.m_node->m_next;
+        
         return --self;
     }
 
