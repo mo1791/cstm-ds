@@ -146,38 +146,39 @@ public: /** CONSTRUCTORS **/
 
 public:
     /** DEREFERENCE OP **/
-    auto operator*(this Iterator& self) noexcept(true) -> reference
+    auto operator*() noexcept(true) -> reference
     {
-        return self.m_node->m_data;
+        return m_node->m_data;
     }
-    auto operator*(this const Iterator& self) noexcept(true) -> reference
+    auto operator*() noexcept(true) -> reference
     {
-        return self.m_node->m_data;
+        return m_node->m_data;
     }
 
 
     /** ARROW OP **/
-    auto operator->(this Iterator& self) noexcept(true) -> pointer
+    auto operator->() noexcept(true) -> pointer
     {
-        return std::addressof( self.m_node->m_data );
+        return std::addressof( m_node->m_data );
     }
-    auto operator->(this const Iterator& self) noexcept(true) -> const_pointer
+    auto operator->() noexcept(true) -> const_pointer
     {
-        return std::addressof( self.m_node->m_data );
+        return std::addressof( m_node->m_data );
     }
 
 
     /** (POST & PRE ) INCREMENT OP **/
-    auto operator++(this Iterator& self) noexcept(true) -> Iterator &
+    auto operator++() noexcept(true) -> Iterator &
     {
-        self.m_node = self.m_node->m_next;
-        return self;
+        m_node = m_node->m_next;
+        return *this;
     }
 
-    auto operator++(this Iterator& self, int) noexcept(true) -> Iterator
+    auto operator++(int) noexcept(true) -> Iterator
     {
-        auto copy = auto{ self };
-        self.m_node = self.m_node->m_next;
+        auto copy = auto{ *this };
+        m_node    = m_node->m_next;
+        
         return copy;
     }
 
